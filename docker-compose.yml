@@ -1,0 +1,24 @@
+# docker-compose để dựng rabbitmq server kèm giao diện quản trị
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_microservices
+    ports:
+      - '5672:5672'   # port kết nối amqp cho các microservice
+      - '15672:15672' # port giao diện quản trị web (rabbitmq management ui)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_microservices
+    ports:
+      - '5432:5432'   # port kết nối csdl postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: order_db
+

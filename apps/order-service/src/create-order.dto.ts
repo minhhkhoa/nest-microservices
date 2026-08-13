@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
+//- dto dùng để kiểm tra dữ liệu client gửi lên khi tạo đơn hàng
 export class CreateOrderDto {
   @IsString()
   @IsNotEmpty({ message: 'Tên sản phẩm không được để trống' })

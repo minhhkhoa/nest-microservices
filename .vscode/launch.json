@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug API Gateway",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug", "api-gateway"],
+      "console": "integratedTerminal",
+      "restart": true
+    },
+    {
+      "name": "Debug Order Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug", "order-service"],
+      "console": "integratedTerminal",
+      "restart": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 Debug All Microservices",
+      "configurations": ["Debug API Gateway", "Debug Order Service"],
+      "stopAll": true
+    }
+  ]
+}

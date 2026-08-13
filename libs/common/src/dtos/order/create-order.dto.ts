@@ -1,5 +1,7 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
+//- tách ra file dto ở common để dùng chung cho các microservices cần đến, sau chỉ sửa 1 chỗ này thôi
+
 //- dto dùng để kiểm tra dữ liệu client gửi lên khi tạo đơn hàng
 export class CreateOrderDto {
   @IsString()

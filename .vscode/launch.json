@@ -18,12 +18,25 @@
       "runtimeArgs": ["run", "start:debug", "order-service"],
       "console": "integratedTerminal",
       "restart": true
+    },
+    {
+      "name": "Debug Notification Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug", "notification-service"],
+      "console": "integratedTerminal",
+      "restart": true
     }
   ],
   "compounds": [
     {
       "name": "🚀 Debug All Microservices",
-      "configurations": ["Debug API Gateway", "Debug Order Service"],
+      "configurations": [
+        "Debug API Gateway",
+        "Debug Order Service",
+        "Debug Notification Service"
+      ],
       "stopAll": true
     }
   ]

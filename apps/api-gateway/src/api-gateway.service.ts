@@ -9,15 +9,31 @@ export class ApiGatewayService {
   constructor(
     //- inject tcp client order_service đã đăng ký trong module
     @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
+
+    //- inject rabbitmq client notification_service đã đăng ký trong module
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientProxy,
   ) {}
 
   //- gửi request tạo đơn hàng qua tcp và chờ phản hồi từ order-service
   async createOrder(
     createOrderDto: CreateOrderDto,
   ): Promise<{ message: string; order: Order }> {
-    return await firstValueFrom(
+    //- bước 1: gọi tcp sang order-service lưu database (chờ kết quả)
+    const result: { message: string; order: Order } = await firstValueFrom(
       this.orderClient.send({ cmd: 'create_order' }, createOrderDto), //- gọi sang order-service.controller.createOrder thông qua tcp
     );
+
+    //- bước 2: bắn event order_created sang rabbitmq theo kiểu fire-and-forget (không cần await chờ phản hồi)
+    this.notificationClient.emit('order_created', result);
+
+    /**
+     * Note: - emit() vs send()
+     *     • send() => yêu cầu - phản hồi (phải chờ nhau)
+     *     • emit() => Publish-Subscribe (không cần chờ đợi, bắn xong là xong)
+     */
+
+    return result;
   }
 
   //- gửi request lấy danh sách đơn hàng qua tcp

@@ -27,6 +27,15 @@
       "runtimeArgs": ["run", "start:debug", "notification-service"],
       "console": "integratedTerminal",
       "restart": true
+    },
+    {
+      "name": "Debug Inventory Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug", "inventory-service"],
+      "console": "integratedTerminal",
+      "restart": true
     }
   ],
   "compounds": [
@@ -35,7 +44,8 @@
       "configurations": [
         "Debug API Gateway",
         "Debug Order Service",
-        "Debug Notification Service"
+        "Debug Notification Service",
+        "Debug Inventory Service"
       ],
       "stopAll": true
     }

@@ -34,6 +34,19 @@ import { ApiGatewayService } from './api-gateway.service';
           },
         },
       },
+
+      //- client 3: kết nối rabbitmq để hỏi đáp 2 chiều với inventory-service (bài 5)
+      {
+        name: 'INVENTORY_SERVICE', //- tên định danh để inject
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://guest:guest@localhost:5672'], //- url kết nối tới container rabbitmq
+          queue: 'inventory_queue', //- tên queue mà service này sẽ lắng nghe
+          queueOptions: {
+            durable: false, //- durable = false nghĩa là queue tạm thời trong lúc học tập
+          },
+        },
+      },
     ]),
   ],
   controllers: [ApiGatewayController],

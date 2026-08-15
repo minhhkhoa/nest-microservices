@@ -1,18 +1,28 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsEmail,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
-//- tách ra file dto ở common để dùng chung cho các microservices cần đến, sau chỉ sửa 1 chỗ này thôi
-
-//- dto dùng để kiểm tra dữ liệu client gửi lên khi tạo đơn hàng
 export class CreateOrderDto {
-  @IsString()
+  @IsString({ message: 'Tên sản phẩm phải là chuỗi ký tự' })
   @IsNotEmpty({ message: 'Tên sản phẩm không được để trống' })
   productName: string;
 
-  @IsNumber()
-  @Min(1, { message: 'Giá sản phẩm phải lớn hơn 0' })
+  @IsNumber({}, { message: 'Giá sản phẩm phải là số hợp lệ' })
+  @Min(1000, { message: 'Giá sản phẩm tối thiểu phải từ 1.000 VNĐ' })
   price: number;
 
-  @IsEmail({}, { message: 'Email không đúng định dạng' })
+  @IsOptional()
+  @IsInt({ message: 'Số lượng mua phải là số nguyên' })
+  @Min(1, { message: 'Số lượng mua tối thiểu phải là 1' })
+  quantity?: number;
+
+  @IsEmail({}, { message: 'Email khách hàng không đúng định dạng' })
   @IsNotEmpty({ message: 'Email khách hàng không được để trống' })
   customerEmail: string;
 }

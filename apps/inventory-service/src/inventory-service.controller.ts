@@ -1,3 +1,4 @@
+import { CheckInventoryDto } from '@app/common';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
@@ -12,7 +13,7 @@ export class InventoryServiceController {
 
   //- lắng nghe yêu cầu kiểm tra tồn kho qua rabbitmq và trả về kết quả cho bên hỏi
   @MessagePattern({ cmd: 'check_inventory' })
-  checkInventory(@Payload() data: { productName: string; quantity?: number }): {
+  checkInventory(@Payload() data: CheckInventoryDto): {
     available: boolean;
     stock: number;
     message: string;

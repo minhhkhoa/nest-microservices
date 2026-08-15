@@ -12,7 +12,7 @@ async function bootstrap() {
         urls: ['amqp://guest:guest@localhost:5672'],
         queue: 'inventory_queue', //- queue nhận các yêu cầu kiểm tra tồn kho
         queueOptions: {
-          durable: false,
+          durable: true,
         },
       },
     },

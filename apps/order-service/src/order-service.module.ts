@@ -1,23 +1,15 @@
+import { DatabaseModule, Order } from '@app/common';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderServiceController } from './order-service.controller';
 import { OrderServiceService } from './order-service.service';
-import { Order } from '@app/common/entities/order/order.entity';
 
 @Module({
   imports: [
-    //- kết nối tới postgresql container (port 5432)
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'postgrespassword',
-      database: 'order_db',
-      entities: [Order],
-      synchronize: true, //- tự động tạo bảng trong postgresql nếu chưa có (chỉ dùng khi dev)
-    }),
-    //- đăng ký order repository để thao tác với bảng orders
+    //- kết nối tới database riêng của service này
+    DatabaseModule.forRoot({ database: 'order_db' }),
+
+    //- đăng ký các bảng thực thể mà service này quản lý
     TypeOrmModule.forFeature([Order]),
   ],
   controllers: [OrderServiceController],

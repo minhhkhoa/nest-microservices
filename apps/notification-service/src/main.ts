@@ -12,7 +12,7 @@ async function bootstrap() {
         urls: ['amqp://guest:guest@localhost:5672'], //- url kết nối tới container rabbitmq
         queue: 'notification_queue', //- tên queue mà service này sẽ lắng nghe
         queueOptions: {
-          durable: false, //- durable = false nghĩa là queue tạm thời trong lúc học tập
+          durable: true,
         },
       },
     },

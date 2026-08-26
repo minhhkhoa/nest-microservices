@@ -6,6 +6,7 @@ export * from './entities/auth/user.entity';
 
 //- export decorators & guards
 export * from './decorators/customize.decorator';
+export * from './decorators/query.decorator';
 export * from './guards/permission.guard';
 
 //- export dtos
@@ -17,6 +18,10 @@ export * from './dtos/auth/auth.dto';
 export * from './rmq/rmq.module';
 export * from './tcp/tcp.module';
 export * from './database/database.module';
+export * from './database/interfaces/pagination.interface';
+export * from './database/interfaces/base-repository.interface';
+export * from './database/repositories/base.abstract.repository';
+export * from './database/services/base.abstract.service';
 
 //- export utils dùng chung
 export * from './utils';

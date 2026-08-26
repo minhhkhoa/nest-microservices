@@ -1,59 +1,89 @@
 {
   "version": "0.2.0",
   "configurations": [
-    //- cấu hình debug api gateway
+    //- cấu hình debug api gateway (cổng inspect 9229)
     {
       "name": "Debug API Gateway",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug", "api-gateway"],
+      "runtimeArgs": [
+        "run",
+        "start:debug",
+        "api-gateway",
+        "--",
+        "--debug=9229"
+      ],
       "console": "integratedTerminal",
       "restart": true
     },
-    //- cấu hình debug auth service
+    //- cấu hình debug auth service (cổng inspect 9230)
     {
       "name": "Debug Auth Service",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug", "auth-service"],
+      "runtimeArgs": [
+        "run",
+        "start:debug",
+        "auth-service",
+        "--",
+        "--debug=9230"
+      ],
       "console": "integratedTerminal",
       "restart": true
     },
-    //- cấu hình debug order service
+    //- cấu hình debug order service (cổng inspect 9231)
     {
       "name": "Debug Order Service",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug", "order-service"],
+      "runtimeArgs": [
+        "run",
+        "start:debug",
+        "order-service",
+        "--",
+        "--debug=9231"
+      ],
       "console": "integratedTerminal",
       "restart": true
     },
-    //- cấu hình debug notification service
+    //- cấu hình debug notification service (cổng inspect 9232)
     {
       "name": "Debug Notification Service",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug", "notification-service"],
+      "runtimeArgs": [
+        "run",
+        "start:debug",
+        "notification-service",
+        "--",
+        "--debug=9232"
+      ],
       "console": "integratedTerminal",
       "restart": true
     },
-    //- cấu hình debug inventory service
+    //- cấu hình debug inventory service (cổng inspect 9233)
     {
       "name": "Debug Inventory Service",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start:debug", "inventory-service"],
+      "runtimeArgs": [
+        "run",
+        "start:debug",
+        "inventory-service",
+        "--",
+        "--debug=9233"
+      ],
       "console": "integratedTerminal",
       "restart": true
     }
   ],
   "compounds": [
-    //- cấu hình chạy đồng thời toàn bộ các microservices chỉ với 1 click
+    //- cấu hình chạy đồng thời toàn bộ các microservices với cổng debug riêng biệt không bị trùng nhau
     {
       "name": "🚀 Debug All Microservices",
       "configurations": [

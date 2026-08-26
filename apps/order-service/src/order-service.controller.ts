@@ -12,17 +12,17 @@ export class OrderServiceController {
    * Khi bên ngoài gửi message TCP đúng nhãn cmd, hàm tương ứng sẽ được gọi và trả về kết quả.
    */
 
-  //- lắng nghe lệnh create_order gửi tới qua giao thức tcp
+  //- lắng nghe lệnh create_order gửi tới qua rabbitmq
   @MessagePattern({ cmd: 'create_order' })
   async createOrder(@Payload() createOrderDto: CreateOrderDto) {
     const order = await this.orderService.createOrder(createOrderDto);
     return {
-      message: 'Tạo đơn hàng qua TCP và lưu vào PostgreSQL thành công!',
+      message: 'Tạo đơn hàng qua RabbitMQ và lưu vào PostgreSQL thành công!',
       order: order,
     };
   }
 
-  //- lắng nghe lệnh get_orders gửi tới qua giao thức tcp
+  //- lắng nghe lệnh get_orders gửi tới qua rabbitmq
   @MessagePattern({ cmd: 'get_orders' })
   async getOrders() {
     return await this.orderService.getOrders();

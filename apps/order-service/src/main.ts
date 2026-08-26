@@ -3,20 +3,25 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { OrderServiceModule } from './order-service.module';
 
 async function bootstrap() {
-  //- tạo microservice lắng nghe qua giao thức tcp thay vì http server
+  //- tạo microservice lắng nghe qua rabbitmq với queue riêng là order_queue
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     OrderServiceModule,
     {
-      transport: Transport.TCP,
+      transport: Transport.RMQ,
       options: {
-        host: '127.0.0.1',
-        port: 3001, //- order-service sẽ lắng nghe cổng tcp 3001 thay vì cổng http 3000 như cũ
+        urls: ['amqp://guest:guest@localhost:5672'],
+        queue: 'order_queue', //- queue nhận các yêu cầu xử lý đơn hàng
+        queueOptions: {
+          durable: true,
+        },
       },
     },
   );
 
   await app.listen();
-  console.log('🚀 Order Microservice (TCP) đang lắng nghe tại cổng 3001...');
+  console.log(
+    '🚀 Order Microservice (RabbitMQ) đang lắng nghe trên queue [order_queue]...',
+  );
 }
 
 bootstrap().catch((err) => {

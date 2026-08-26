@@ -1,6 +1,7 @@
 {
   "version": "0.2.0",
   "configurations": [
+    //- cấu hình debug api gateway
     {
       "name": "Debug API Gateway",
       "type": "node",
@@ -10,6 +11,17 @@
       "console": "integratedTerminal",
       "restart": true
     },
+    //- cấu hình debug auth service
+    {
+      "name": "Debug Auth Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug", "auth-service"],
+      "console": "integratedTerminal",
+      "restart": true
+    },
+    //- cấu hình debug order service
     {
       "name": "Debug Order Service",
       "type": "node",
@@ -19,6 +31,7 @@
       "console": "integratedTerminal",
       "restart": true
     },
+    //- cấu hình debug notification service
     {
       "name": "Debug Notification Service",
       "type": "node",
@@ -28,6 +41,7 @@
       "console": "integratedTerminal",
       "restart": true
     },
+    //- cấu hình debug inventory service
     {
       "name": "Debug Inventory Service",
       "type": "node",
@@ -39,10 +53,12 @@
     }
   ],
   "compounds": [
+    //- cấu hình chạy đồng thời toàn bộ các microservices chỉ với 1 click
     {
       "name": "🚀 Debug All Microservices",
       "configurations": [
         "Debug API Gateway",
+        "Debug Auth Service",
         "Debug Order Service",
         "Debug Notification Service",
         "Debug Inventory Service"

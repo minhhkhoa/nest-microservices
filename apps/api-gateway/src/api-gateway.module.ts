@@ -1,19 +1,30 @@
-import { RmqModule, TcpModule } from '@app/common';
+import { PermissionGuard } from '@app/common';
 import { Module } from '@nestjs/common';
-import { ApiGatewayController } from './api-gateway.controller';
-import { ApiGatewayService } from './api-gateway.service';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { OrdersModule } from './orders/orders.module';
+import { RolesPermissionsModule } from './roles-permissions/roles-permissions.module';
 
 @Module({
   imports: [
-    //- đăng ký từng service
-    TcpModule.register({ name: 'ORDER_SERVICE', port: 3001 }),
-    RmqModule.register({
-      name: 'NOTIFICATION_SERVICE',
-      queue: 'notification_queue',
-    }),
-    RmqModule.register({ name: 'INVENTORY_SERVICE', queue: 'inventory_queue' }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    //- import các feature modules con
+    AuthModule,
+    RolesPermissionsModule,
+    OrdersModule,
   ],
-  controllers: [ApiGatewayController],
-  providers: [ApiGatewayService],
+  providers: [
+    //- đăng ký global guards: jwt chạy trước, permission guard chạy sau
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
+    },
+  ],
 })
 export class ApiGatewayModule {}

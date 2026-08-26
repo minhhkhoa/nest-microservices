@@ -29,5 +29,6 @@
         "libs/common/src/*"
       ]
     }
-  }
+  },
+  "include": ["apps/**/*", "libs/**/*"]
 }

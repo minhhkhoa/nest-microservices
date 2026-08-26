@@ -1,5 +1,4 @@
-# docker-compose để dựng rabbitmq server kèm giao diện quản trị
-version: '3.8'
+# - docker-compose khởi dựng rabbitmq, postgresql và redis cho hệ thống microservices
 
 services:
   rabbitmq:
@@ -22,3 +21,16 @@ services:
       POSTGRES_PASSWORD: postgrespassword
       POSTGRES_DB: order_db
 
+  # - dịch vụ redis cache lưu trữ tạm và tối ưu truy vấn
+  redis:
+    image: redis:7-alpine
+    container_name: redis_microservices
+    ports:
+      - '6380:6379'   # port kết nối redis client (host 6380 -> container 6379)
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  # - lưu trữ dữ liệu redis bền vững
+  redis_data:

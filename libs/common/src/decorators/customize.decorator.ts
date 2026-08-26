@@ -22,3 +22,8 @@ export const CurrentUser = createParamDecorator(
     return data && user ? user[data] : user;
   },
 );
+
+//- decorator gắn thông điệp phản hồi cho api (phục vụ transform interceptor)
+export const RESPONSE_MESSAGE = 'response_message';
+export const ResponseMessage = (message: string) =>
+  SetMetadata(RESPONSE_MESSAGE, message);

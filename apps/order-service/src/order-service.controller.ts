@@ -17,11 +17,7 @@ export class OrderServiceController {
   //- lắng nghe lệnh create_order gửi tới qua rabbitmq
   @MessagePattern({ cmd: 'create_order' })
   async createOrder(@Payload() createOrderDto: CreateOrderDto) {
-    const order = await this.orderService.createOrder(createOrderDto);
-    return {
-      message: 'Tạo đơn hàng qua RabbitMQ và lưu vào PostgreSQL thành công!',
-      order: order,
-    };
+    return await this.orderService.createOrder(createOrderDto);
   }
 
   //- lắng nghe lệnh get_orders gửi tới qua rabbitmq kèm bộ lọc/phân trang

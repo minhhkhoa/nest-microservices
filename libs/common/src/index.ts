@@ -7,6 +7,7 @@ export * from './entities/auth/user.entity';
 //- export decorators, guards & interceptors
 export * from './decorators/customize.decorator';
 export * from './decorators/query.decorator';
+export * from './decorators/swagger.decorator';
 export * from './guards/permission.guard';
 export * from './interceptors/transform.interceptor';
 export * from './interceptors/logging.interceptor';

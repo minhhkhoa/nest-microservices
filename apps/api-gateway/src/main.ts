@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
 
 async function bootstrap() {
@@ -14,8 +15,38 @@ async function bootstrap() {
     }),
   );
 
+  //- cấu hình swagger api documentation
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('NestJS Microservices - API Gateway')
+    .setDescription(
+      'Hệ thống tài liệu OpenAPI cho toàn bộ các dịch vụ qua API Gateway, hỗ trợ xem schema request body, response chuẩn hóa và test upload file trực tiếp.',
+    )
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Nhập access token jwt vào đây (không cần chữ Bearer)',
+        in: 'header',
+      },
+      'JWT-auth', //- tên security scheme để gán @ApiBearerAuth('JWT-auth')
+    )
+    .build();
+
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+    swaggerOptions: {
+      persistAuthorization: true, //- lưu token khi f5 lại trình duyệt
+      filter: true, //- thanh tìm kiếm endpoint
+      docExpansion: 'list', //- mặc định mở danh sách endpoint
+    },
+  });
+
   await app.listen(3000);
   console.log('🚀 API Gateway (HTTP) đang chạy tại: http://localhost:3000');
+  console.log('📚 Swagger UI tài liệu API: http://localhost:3000/api/docs');
 }
 
 bootstrap().catch((err) => {

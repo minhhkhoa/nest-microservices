@@ -28,4 +28,25 @@ export class GatewayOrdersService {
       this.orderClient.send({ cmd: 'get_orders' }, condition || {}),
     );
   }
+
+  //- lấy chi tiết đơn hàng theo id
+  async getOrderById(id: number): Promise<Order> {
+    return await firstValueFrom(
+      this.orderClient.send({ cmd: 'get_order_by_id' }, { id }),
+    );
+  }
+
+  //- xóa mềm đơn hàng
+  async deleteOrder(id: number): Promise<boolean> {
+    return await firstValueFrom(
+      this.orderClient.send({ cmd: 'delete_order' }, { id }),
+    );
+  }
+
+  //- khôi phục đơn hàng
+  async restoreOrder(id: number): Promise<boolean> {
+    return await firstValueFrom(
+      this.orderClient.send({ cmd: 'restore_order' }, { id }),
+    );
+  }
 }

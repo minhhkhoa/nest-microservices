@@ -21,21 +21,21 @@ export class Permission {
 
   @ApiProperty({
     description: 'Mã quyền hạn',
-    example: 'ORDER_CREATE',
+    example: 'PERMISSION_CREATE',
   })
   @Column({ unique: true })
   code: string; //- mã định danh quyền hạn (vd: user_create, product_view)
 
   @ApiProperty({
     description: 'Tên hiển thị quyền hạn',
-    example: 'Tạo đơn hàng',
+    example: 'Tạo quyền hạn mới',
   })
   @Column()
   name: string; //- tên hiển thị của quyền hạn
 
   @ApiProperty({
     description: 'Đường dẫn API',
-    example: '/orders',
+    example: '/permissions',
   })
   @Column()
   apiPath: string; //- đường dẫn api (vd: /api/v1/users, /api/v1/orders/:id)
@@ -49,7 +49,7 @@ export class Permission {
 
   @ApiProperty({
     description: 'Nhóm module quản lý',
-    example: 'ORDERS',
+    example: 'PERMISSIONS',
   })
   @Column()
   module: string; //- nhóm module (vd: users, products, orders, auth)

@@ -3,6 +3,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth-service.controller';
 import { AuthService } from './auth-service.service';
+import { PermissionRepository } from './repositories/permission.repository';
+import { RoleRepository } from './repositories/role.repository';
+import { UserRepository } from './repositories/user.repository';
+import { PermissionsService } from './services/permissions.service';
+import { RolesService } from './services/roles.service';
 
 @Module({
   imports: [
@@ -11,6 +16,21 @@ import { AuthService } from './auth-service.service';
     TypeOrmModule.forFeature([User, Role, Permission]),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [
+    UserRepository,
+    RoleRepository,
+    PermissionRepository,
+    AuthService,
+    RolesService,
+    PermissionsService,
+  ],
+  exports: [
+    UserRepository,
+    RoleRepository,
+    PermissionRepository,
+    AuthService,
+    RolesService,
+    PermissionsService,
+  ],
 })
 export class AuthModule {}

@@ -1,9 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 //- khai báo entity order tương ứng với bảng orders trong postgresql
@@ -47,4 +49,17 @@ export class Order {
   })
   @CreateDateColumn()
   createdAt: Date;
+
+  //- thời gian cập nhật đơn hàng
+  @ApiProperty({
+    description: 'Thời gian cập nhật đơn hàng',
+    example: '2026-08-27T12:00:00.000Z',
+  })
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  //- thời gian xóa mềm
+  @ApiHideProperty()
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

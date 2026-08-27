@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -62,75 +62,79 @@ export class LoginDto {
 export class CreateRoleDto {
   @ApiProperty({
     description: 'Mã vai trò (viết liền không dấu)',
-    example: 'manager',
+    example: 'MANAGER',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Mã vai trò không được để trống' })
+  @IsString({ message: 'Mã vai trò phải là chuỗi' })
   code: string;
 
   @ApiProperty({
     description: 'Tên hiển thị của vai trò',
     example: 'Quản lý kho',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Tên vai trò không được để trống' })
+  @IsString({ message: 'Tên vai trò phải là chuỗi' })
   name: string;
 
   @ApiPropertyOptional({
     description: 'Mô tả chi tiết quyền hạn của vai trò',
-    example: 'Quản lý toàn bộ thông tin hàng hóa và đơn hàng',
+    example: 'Quản lý toàn bộ thông tin hàng hóa và phân quyền kho',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Mô tả phải là chuỗi' })
   description?: string;
 
   @ApiPropertyOptional({
     description: 'Danh sách ID quyền hạn gán cho vai trò',
-    example: ['123e4567-e89b-12d3-a456-426614174000'],
+    example: ['c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33'],
     type: [String],
   })
   @IsOptional()
   permissionIds?: string[];
 }
 
+export class UpdateRoleDto extends PartialType(CreateRoleDto) {}
+
 export class CreatePermissionDto {
   @ApiProperty({
     description: 'Mã quyền hạn',
-    example: 'ORDER_CREATE',
+    example: 'PERMISSION_CREATE',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Mã quyền không được để trống' })
+  @IsString({ message: 'Mã quyền phải là chuỗi' })
   code: string;
 
   @ApiProperty({
     description: 'Tên quyền hạn',
-    example: 'Tạo đơn hàng',
+    example: 'Tạo quyền hạn mới',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Tên quyền không được để trống' })
+  @IsString({ message: 'Tên quyền phải là chuỗi' })
   name: string;
 
   @ApiProperty({
     description: 'Đường dẫn API',
-    example: '/orders',
+    example: '/permissions',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Đường dẫn API không được để trống' })
+  @IsString({ message: 'Đường dẫn API phải là chuỗi' })
   apiPath: string;
 
   @ApiProperty({
     description: 'Phương thức HTTP (GET, POST, PUT, DELETE, PATCH)',
     example: 'POST',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Phương thức HTTP không được để trống' })
+  @IsString({ message: 'Phương thức HTTP phải là chuỗi' })
   method: string;
 
   @ApiProperty({
     description: 'Tên module quản lý',
-    example: 'ORDERS',
+    example: 'PERMISSIONS',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Tên module không được để trống' })
+  @IsString({ message: 'Tên module phải là chuỗi' })
   module: string;
 }
+
+export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}

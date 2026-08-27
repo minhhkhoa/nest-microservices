@@ -8,8 +8,22 @@ import {
   ResponseMessage,
 } from '@app/common';
 import type { ConditionQuery, FindAllResponse } from '@app/common';
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { GatewayOrdersService } from './gateway-orders.service';
 
 @ApiTags('Orders')
@@ -52,5 +66,58 @@ export class GatewayOrdersController {
     @QueryFiltered() condition: ConditionQuery<Order>,
   ): Promise<FindAllResponse<Order>> {
     return await this.ordersService.getOrders(condition);
+  }
+
+  //- endpoint lấy chi tiết đơn hàng theo id
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy chi tiết đơn hàng theo ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID đơn hàng (kiểu số)',
+    example: 1,
+  })
+  @ResponseMessage('Lấy chi tiết đơn hàng thành công')
+  @ApiCustomResponse({
+    type: Order,
+    description: 'Chi tiết thông tin đơn hàng',
+  })
+  async getOrderById(@Param('id', ParseIntPipe) id: number): Promise<Order> {
+    return await this.ordersService.getOrderById(id);
+  }
+
+  //- endpoint xóa mềm đơn hàng
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa mềm đơn hàng khỏi hệ thống' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID đơn hàng cần xóa (kiểu số)',
+    example: 1,
+  })
+  @ResponseMessage('Xóa đơn hàng thành công')
+  @ApiCustomResponse({ description: 'Xóa đơn hàng thành công' })
+  async deleteOrder(@Param('id', ParseIntPipe) id: number) {
+    await this.ordersService.deleteOrder(id);
+    return {
+      deleted: true,
+      id,
+    };
+  }
+
+  //- endpoint khôi phục đơn hàng đã xóa mềm
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Khôi phục đơn hàng đã bị xóa mềm' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID đơn hàng cần khôi phục (kiểu số)',
+    example: 1,
+  })
+  @ResponseMessage('Khôi phục đơn hàng thành công')
+  @ApiCustomResponse({ description: 'Khôi phục đơn hàng thành công' })
+  async restoreOrder(@Param('id', ParseIntPipe) id: number) {
+    await this.ordersService.restoreOrder(id);
+    return {
+      restored: true,
+      id,
+    };
   }
 }

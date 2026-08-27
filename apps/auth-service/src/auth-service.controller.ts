@@ -1,12 +1,26 @@
+import {
+  CreatePermissionDto,
+  CreateRoleDto,
+  Permission,
+  RegisterDto,
+  Role,
+  UpdatePermissionDto,
+  UpdateRoleDto,
+} from '@app/common';
+import type { ConditionQuery } from '@app/common';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-
 import { AuthService } from './auth-service.service';
-import { CreatePermissionDto, CreateRoleDto, RegisterDto } from '@app/common';
+import { PermissionsService } from './services/permissions.service';
+import { RolesService } from './services/roles.service';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly rolesService: RolesService,
+    private readonly permissionsService: PermissionsService,
+  ) {}
 
   //- kiểm tra đăng nhập email và password
   @MessagePattern({ cmd: 'auth_validate_user' })
@@ -17,33 +31,91 @@ export class AuthController {
     return await this.authService.validateUser(data.email, password);
   }
 
+  //- đăng ký tài khoản
   @MessagePattern({ cmd: 'auth_register' })
   async register(@Payload() data: RegisterDto) {
     return await this.authService.register(data);
   }
 
+  //- lấy thông tin tài khoản kèm quyền hạn phục vụ jwt strategy
   @MessagePattern({ cmd: 'user_get_with_permissions' })
   async getUserWithPermissions(@Payload() data: { id: string }) {
     return await this.authService.getUserWithPermissions(data.id);
   }
 
-  @MessagePattern({ cmd: 'permission_create' })
-  async createPermission(@Payload() data: CreatePermissionDto) {
-    return await this.authService.createPermission(data);
-  }
-
-  @MessagePattern({ cmd: 'permission_get_all' })
-  async getPermissions() {
-    return await this.authService.getPermissions();
-  }
-
+  // ================= ROLE PATTERNS =================
+  //- tạo vai trò mới
   @MessagePattern({ cmd: 'role_create' })
   async createRole(@Payload() data: CreateRoleDto) {
-    return await this.authService.createRole(data);
+    return await this.rolesService.createRole(data);
   }
 
-  @MessagePattern({ cmd: 'role_get_all' })
-  async getRoles() {
-    return await this.authService.getRoles();
+  //- lấy danh sách vai trò phân trang và tìm kiếm
+  @MessagePattern({ cmd: 'role_find_all' })
+  async getRoles(@Payload() condition?: ConditionQuery<Role>) {
+    return await this.rolesService.findAllRoles(condition);
+  }
+
+  //- lấy chi tiết vai trò theo id
+  @MessagePattern({ cmd: 'role_find_by_id' })
+  async getRoleById(@Payload() data: { id: string }) {
+    return await this.rolesService.findRoleById(data.id);
+  }
+
+  //- cập nhật vai trò
+  @MessagePattern({ cmd: 'role_update' })
+  async updateRole(@Payload() data: { id: string; dto: UpdateRoleDto }) {
+    return await this.rolesService.updateRole(data.id, data.dto);
+  }
+
+  //- xóa mềm vai trò
+  @MessagePattern({ cmd: 'role_delete' })
+  async deleteRole(@Payload() data: { id: string }) {
+    return await this.rolesService.remove(data.id);
+  }
+
+  //- khôi phục vai trò đã xóa mềm
+  @MessagePattern({ cmd: 'role_restore' })
+  async restoreRole(@Payload() data: { id: string }) {
+    return await this.rolesService.restore(data.id);
+  }
+
+  // ================= PERMISSION PATTERNS =================
+  //- tạo quyền hạn mới
+  @MessagePattern({ cmd: 'permission_create' })
+  async createPermission(@Payload() data: CreatePermissionDto) {
+    return await this.permissionsService.createPermission(data);
+  }
+
+  //- lấy danh sách quyền hạn phân trang và tìm kiếm
+  @MessagePattern({ cmd: 'permission_find_all' })
+  async getPermissions(@Payload() condition?: ConditionQuery<Permission>) {
+    return await this.permissionsService.findAll(condition);
+  }
+
+  //- lấy chi tiết quyền hạn theo id
+  @MessagePattern({ cmd: 'permission_find_by_id' })
+  async getPermissionById(@Payload() data: { id: string }) {
+    return await this.permissionsService.findByIdOrFail(data.id);
+  }
+
+  //- cập nhật quyền hạn
+  @MessagePattern({ cmd: 'permission_update' })
+  async updatePermission(
+    @Payload() data: { id: string; dto: UpdatePermissionDto },
+  ) {
+    return await this.permissionsService.updatePermission(data.id, data.dto);
+  }
+
+  //- xóa mềm quyền hạn
+  @MessagePattern({ cmd: 'permission_delete' })
+  async deletePermission(@Payload() data: { id: string }) {
+    return await this.permissionsService.remove(data.id);
+  }
+
+  //- khôi phục quyền hạn đã xóa mềm
+  @MessagePattern({ cmd: 'permission_restore' })
+  async restorePermission(@Payload() data: { id: string }) {
+    return await this.permissionsService.restore(data.id);
   }
 }

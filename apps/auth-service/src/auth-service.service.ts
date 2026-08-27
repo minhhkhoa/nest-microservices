@@ -1,34 +1,30 @@
 import {
-  Permission,
-  Role,
+  BaseServiceAbstract,
+  RegisterDto,
   User,
   comparePassword,
   hashPassword,
 } from '@app/common';
-import {
-  RegisterDto,
-  CreateRoleDto,
-  CreatePermissionDto,
-} from '@app/common/dtos/auth/auth.dto';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { RoleRepository } from './repositories/role.repository';
+import { UserRepository } from './repositories/user.repository';
 
+//- service xử lý xác thực và tài khoản kế thừa base service abstract
 @Injectable()
-export class AuthService {
+export class AuthService extends BaseServiceAbstract<User> {
   constructor(
-    @InjectRepository(User) private readonly userRepo: Repository<User>,
-    @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
-    @InjectRepository(Permission)
-    private readonly permissionRepo: Repository<Permission>,
-  ) {}
+    private readonly userRepository: UserRepository,
+    private readonly roleRepository: RoleRepository,
+  ) {
+    super(userRepository);
+  }
 
   //- kiểm tra email và mật khẩu khi đăng nhập
   async validateUser(
     email: string,
     pass: string,
   ): Promise<Omit<User, 'password'> | null> {
-    const user = await this.userRepo.findOne({
+    const user = await this.userRepository.findOne({
       where: { email },
       relations: ['role'],
     });
@@ -40,17 +36,17 @@ export class AuthService {
     if (!isMatch) return null;
 
     //- loại bỏ password trước khi trả về
-    const { password, ...result } = user;
+    const { password: _password, ...result } = user;
     return result;
   }
 
   //- đăng ký tài khoản mới
   async register(registerDto: RegisterDto) {
-    const existing = await this.userRepo.findOne({
+    const existing = await this.userRepository.findOne({
       where: { email: registerDto.email },
     });
     if (existing) {
-      throw new Error('Email này đã tồn tại');
+      throw new BadRequestException('Email này đã tồn tại');
     }
 
     //- băm mật khẩu
@@ -58,59 +54,33 @@ export class AuthService {
 
     //- tìm role mặc định nếu không truyền lên
     const roleCode = registerDto.roleCode || 'CUSTOMER';
-    let role = await this.roleRepo.findOne({ where: { code: roleCode } });
+    let role = await this.roleRepository.findOne({ where: { code: roleCode } });
     if (!role) {
       //- nếu chưa có thì tự khởi tạo role
-      role = await this.roleRepo.save({ code: roleCode, name: roleCode });
+      role = await this.roleRepository.create({
+        code: roleCode,
+        name: roleCode,
+        description: '',
+        permissions: [],
+      });
     }
 
-    const newUser = this.userRepo.create({
+    const saved = await this.userRepository.create({
       name: registerDto.name,
       email: registerDto.email,
       password: hashedPassword,
       role: role,
     });
 
-    const saved = await this.userRepo.save(newUser);
-    const { password, ...result } = saved;
+    const { password: _password, ...result } = saved;
     return result;
   }
 
   //- lấy thông tin user kèm đầy đủ role và permissions (dùng cho jwt strategy)
   async getUserWithPermissions(userId: string) {
-    return await this.userRepo.findOne({
+    return await this.userRepository.findOne({
       where: { id: userId },
       relations: ['role', 'role.permissions'],
     });
-  }
-
-  //- quản lý permissions
-  async createPermission(dto: CreatePermissionDto) {
-    const perm = this.permissionRepo.create(dto);
-    return await this.permissionRepo.save(perm);
-  }
-
-  async getPermissions() {
-    return await this.permissionRepo.find();
-  }
-
-  //- quản lý roles
-  async createRole(dto: CreateRoleDto) {
-    const permissions = dto.permissionIds
-      ? await this.permissionRepo.findBy({ id: In(dto.permissionIds) })
-      : [];
-
-    const role = this.roleRepo.create({
-      code: dto.code,
-      name: dto.name,
-      description: dto.description,
-      permissions: permissions,
-    });
-
-    return await this.roleRepo.save(role);
-  }
-
-  async getRoles() {
-    return await this.roleRepo.find({ relations: ['permissions'] });
   }
 }

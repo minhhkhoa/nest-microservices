@@ -13,4 +13,3 @@ import { GatewayOrdersService } from './gateway-orders.service';
   exports: [GatewayOrdersService],
 })
 export class GatewayOrdersModule {}
-

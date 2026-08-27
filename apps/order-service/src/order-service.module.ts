@@ -27,4 +27,3 @@ import { OrderServiceService } from './order-service.service';
   exports: [OrderRepository, OrderServiceService],
 })
 export class OrderServiceModule {}
-

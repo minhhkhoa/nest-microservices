@@ -9,6 +9,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GatewayAuthModule } from './gateway-auth/gateway-auth.module';
 import { GatewayOrdersModule } from './gateway-orders/gateway-orders.module';
 import { GatewayRolesPermissionsModule } from './gateway-roles-permissions/gateway-roles-permissions.module';
+import { GatewayStorageModule } from './gateway-storage/gateway-storage.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { GatewayRolesPermissionsModule } from './gateway-roles-permissions/gatew
     GatewayAuthModule,
     GatewayRolesPermissionsModule,
     GatewayOrdersModule,
+    GatewayStorageModule,
   ],
   providers: [
     //- đăng ký global guards: jwt chạy trước, permission guard chạy sau

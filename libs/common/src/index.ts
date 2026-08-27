@@ -30,3 +30,9 @@ export * from './redis/redis.module';
 
 //- export utils dùng chung
 export * from './utils';
+
+//- export file & storage utilities
+export * from './file/interfaces/storage.interface';
+export * from './file/config/multer.config';
+export * from './file/dtos/query-image.dto';
+export * from './file/decorators/file.decorator';

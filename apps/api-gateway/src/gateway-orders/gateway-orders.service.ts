@@ -1,10 +1,11 @@
 import { CreateOrderDto, Order } from '@app/common';
+import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class OrdersService {
+export class GatewayOrdersService {
   constructor(
     //- inject rabbitmq client order_service đã đăng ký trong module
     @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
@@ -50,10 +51,12 @@ export class OrdersService {
     return result;
   }
 
-  //- gửi request lấy danh sách đơn hàng qua rabbitmq
-  async getOrders(): Promise<Order[]> {
+  //- gửi request lấy danh sách đơn hàng qua rabbitmq kèm theo condition phân trang
+  async getOrders(
+    condition?: ConditionQuery<Order>,
+  ): Promise<FindAllResponse<Order>> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'get_orders' }, {}),
+      this.orderClient.send({ cmd: 'get_orders' }, condition || {}),
     );
   }
 }

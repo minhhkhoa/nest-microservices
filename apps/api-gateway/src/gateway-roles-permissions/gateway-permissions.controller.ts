@@ -1,11 +1,11 @@
 import { CreatePermissionDto, Permission } from '@app/common';
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { RolesPermissionsService } from './roles-permissions.service';
+import { GatewayRolesPermissionsService } from './gateway-roles-permissions.service';
 
 @Controller('permissions')
-export class PermissionsController {
+export class GatewayPermissionsController {
   constructor(
-    private readonly rolesPermissionsService: RolesPermissionsService,
+    private readonly rolesPermissionsService: GatewayRolesPermissionsService,
   ) {}
 
   //- tạo quyền mới trong hệ thống

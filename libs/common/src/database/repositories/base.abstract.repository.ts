@@ -163,13 +163,13 @@ export abstract class BaseAbstractRepository<
     const totalPage = Math.ceil(totalItems / limit);
 
     return {
-      data,
       pagination: {
         page,
         limit,
         total_items: totalItems,
         total_page: totalPage,
       },
+      data,
     };
   }
 

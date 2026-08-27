@@ -1,16 +1,14 @@
 import {
   LoggingInterceptor,
-  PermissionGuard,
   RedisModule,
   TransformInterceptor,
 } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { OrdersModule } from './orders/orders.module';
-import { RolesPermissionsModule } from './roles-permissions/roles-permissions.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { GatewayAuthModule } from './gateway-auth/gateway-auth.module';
+import { GatewayOrdersModule } from './gateway-orders/gateway-orders.module';
+import { GatewayRolesPermissionsModule } from './gateway-roles-permissions/gateway-roles-permissions.module';
 
 @Module({
   imports: [
@@ -22,20 +20,20 @@ import { RolesPermissionsModule } from './roles-permissions/roles-permissions.mo
       password: process.env.REDIS_PASSWORD || undefined,
     }),
     //- import các feature modules con
-    AuthModule,
-    RolesPermissionsModule,
-    OrdersModule,
+    GatewayAuthModule,
+    GatewayRolesPermissionsModule,
+    GatewayOrdersModule,
   ],
   providers: [
     //- đăng ký global guards: jwt chạy trước, permission guard chạy sau
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: PermissionGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: GatewayJwtAuthGuard,
+    // },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: PermissionGuard,
+    // },
     //- đăng ký global interceptors: logging đo hiệu năng, transform chuẩn hóa response
     {
       provide: APP_INTERCEPTOR,

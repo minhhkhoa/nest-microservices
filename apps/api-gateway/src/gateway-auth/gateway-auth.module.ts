@@ -3,10 +3,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './passport-strategy/jwt.strategy';
-import { LocalStrategy } from './passport-strategy/local.strategy';
+import { GatewayAuthController } from './gateway-auth.controller';
+import { GatewayAuthService } from './gateway-auth.service';
+import { GatewayJwtStrategy } from './passport-strategy/gateway-jwt.strategy';
+import { GatewayLocalStrategy } from './passport-strategy/gateway-local.strategy';
 
 @Module({
   imports: [
@@ -23,8 +23,8 @@ import { LocalStrategy } from './passport-strategy/local.strategy';
     //- đăng ký kết nối tcp sang auth-service
     TcpModule.register({ name: 'AUTH_SERVICE', port: 3004 }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService, JwtModule, PassportModule],
+  controllers: [GatewayAuthController],
+  providers: [GatewayAuthService, GatewayLocalStrategy, GatewayJwtStrategy],
+  exports: [GatewayAuthService, JwtModule, PassportModule],
 })
-export class AuthModule {}
+export class GatewayAuthModule {}

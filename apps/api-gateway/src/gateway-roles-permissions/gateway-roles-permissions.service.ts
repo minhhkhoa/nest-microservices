@@ -9,7 +9,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class RolesPermissionsService {
+export class GatewayRolesPermissionsService {
   constructor(
     //- inject tcp client auth_service để quản lý role và permission
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,

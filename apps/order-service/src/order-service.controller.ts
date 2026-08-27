@@ -1,7 +1,9 @@
+import { CreateOrderDto, Order } from '@app/common';
+import type { ConditionQuery, FindAllResponse } from '@app/common';
+
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { OrderServiceService } from './order-service.service';
-import { CreateOrderDto } from '@app/common/dtos/order/create-order.dto';
 
 @Controller()
 export class OrderServiceController {
@@ -22,9 +24,11 @@ export class OrderServiceController {
     };
   }
 
-  //- lắng nghe lệnh get_orders gửi tới qua rabbitmq
+  //- lắng nghe lệnh get_orders gửi tới qua rabbitmq kèm bộ lọc/phân trang
   @MessagePattern({ cmd: 'get_orders' })
-  async getOrders() {
-    return await this.orderService.getOrders();
+  async getOrders(
+    @Payload() condition?: ConditionQuery<Order>,
+  ): Promise<FindAllResponse<Order>> {
+    return await this.orderService.findAll(condition);
   }
 }

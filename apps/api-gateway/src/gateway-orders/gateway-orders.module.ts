@@ -1,7 +1,7 @@
 import { RmqModule } from '@app/common';
 import { Module } from '@nestjs/common';
-import { OrdersController } from './orders.controller';
-import { OrdersService } from './orders.service';
+import { GatewayOrdersController } from './gateway-orders.controller';
+import { GatewayOrdersService } from './gateway-orders.service';
 
 @Module({
   imports: [
@@ -15,8 +15,8 @@ import { OrdersService } from './orders.service';
     //- đăng ký kết nối rabbitmq sang inventory_service
     RmqModule.register({ name: 'INVENTORY_SERVICE', queue: 'inventory_queue' }),
   ],
-  controllers: [OrdersController],
-  providers: [OrdersService],
-  exports: [OrdersService],
+  controllers: [GatewayOrdersController],
+  providers: [GatewayOrdersService],
+  exports: [GatewayOrdersService],
 })
-export class OrdersModule {}
+export class GatewayOrdersModule {}

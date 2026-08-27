@@ -10,8 +10,8 @@ export interface PaginationMetadata {
 
 //- định dạng phản hồi chuẩn cho các api phân trang danh sách
 export interface FindAllResponse<T> {
-  data: T[];
   pagination: PaginationMetadata;
+  data: T[];
 }
 
 //- tùy chọn phân trang và sắp xếp

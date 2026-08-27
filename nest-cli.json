@@ -3,7 +3,7 @@
   "collection": "@nestjs/schematics",
   "defaultProject": "order-service",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": false
   },
   "monorepo": true,
   "projects": {

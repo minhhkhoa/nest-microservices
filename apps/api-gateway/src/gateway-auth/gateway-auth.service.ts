@@ -5,7 +5,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class AuthService {
+export class GatewayAuthService {
   constructor(
     private readonly jwtService: JwtService,
     //- inject tcp client auth_service đã đăng ký trong module

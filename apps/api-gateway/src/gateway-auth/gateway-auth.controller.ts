@@ -8,11 +8,11 @@ import {
 } from '@app/common';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { AuthService } from './auth.service';
+import { GatewayAuthService } from './gateway-auth.service';
 
 @Controller('auth')
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+export class GatewayAuthController {
+  constructor(private readonly authService: GatewayAuthService) {}
 
   //- đăng ký tài khoản (route public không cần token)
   @Public()

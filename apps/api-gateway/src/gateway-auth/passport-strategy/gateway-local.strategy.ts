@@ -6,7 +6,7 @@ import { Strategy } from 'passport-local';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class LocalStrategy extends PassportStrategy(Strategy) {
+export class GatewayLocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
   ) {

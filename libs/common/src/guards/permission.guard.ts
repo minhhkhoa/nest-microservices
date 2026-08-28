@@ -5,6 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ROLE_ADMIN } from '../constants/rbac.constant';
 import {
   IS_PUBLIC_KEY,
   IS_PUBLIC_PERMISSION_KEY,
@@ -44,8 +45,13 @@ export class PermissionGuard implements CanActivate {
       throw new ForbiddenException('Bạn chưa đăng nhập');
     }
 
-    //- bypass cho super admin
-    if (user.role?.code === 'SUPER_ADMIN') {
+    //- bypass cho role admin tối cao
+    const adminRole = process.env.DEFAULT_ADMIN_ROLE || ROLE_ADMIN;
+    if (
+      user.role?.code === adminRole ||
+      user.role?.code === 'ADMIN' ||
+      user.role?.code === 'SUPER_ADMIN'
+    ) {
       return true;
     }
 

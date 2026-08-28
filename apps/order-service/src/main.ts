@@ -3,14 +3,18 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { OrderServiceModule } from './order-service.module';
 
 async function bootstrap() {
-  //- tạo microservice lắng nghe qua rabbitmq với queue riêng là order_queue
+  const rmqUrl =
+    process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
+  const queue = process.env.ORDER_QUEUE || 'order_queue';
+
+  //- tạo microservice lắng nghe qua rabbitmq với queue cấu hình từ biến môi trường
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     OrderServiceModule,
     {
       transport: Transport.RMQ,
       options: {
-        urls: ['amqp://guest:guest@localhost:5672'],
-        queue: 'order_queue', //- queue nhận các yêu cầu xử lý đơn hàng
+        urls: [rmqUrl],
+        queue, //- queue nhận các yêu cầu xử lý đơn hàng
         queueOptions: {
           durable: true,
         },
@@ -20,7 +24,7 @@ async function bootstrap() {
 
   await app.listen();
   console.log(
-    '🚀 Order Microservice (RabbitMQ) đang lắng nghe trên queue [order_queue]...',
+    `🚀 Order Microservice (RabbitMQ) đang lắng nghe trên queue [${queue}]...`,
   );
 }
 

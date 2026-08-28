@@ -44,9 +44,10 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(3000);
-  console.log('🚀 API Gateway (HTTP) đang chạy tại: http://localhost:3000');
-  console.log('📚 Swagger UI tài liệu API: http://localhost:3000/api/docs');
+  const port = Number(process.env.PORT || 3000);
+  await app.listen(port);
+  console.log(`🚀 API Gateway (HTTP) đang chạy tại: http://localhost:${port}`);
+  console.log(`📚 Swagger UI tài liệu API: http://localhost:${port}/api/docs`);
 }
 
 bootstrap().catch((err) => {

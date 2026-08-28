@@ -32,14 +32,6 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
   @MinLength(6, { message: 'Mật khẩu phải từ 6 ký tự trở lên' })
   password: string;
-
-  @ApiPropertyOptional({
-    description: 'Mã vai trò muốn gán (mặc định customer)',
-    example: 'customer',
-  })
-  @IsOptional()
-  @IsString()
-  roleCode?: string; //- mã vai trò muốn gán (mặc định là customer)
 }
 
 export class LoginDto {

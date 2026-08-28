@@ -3,14 +3,18 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { InventoryServiceModule } from './inventory-service.module';
 
 async function bootstrap() {
-  //- tạo microservice lắng nghe qua rabbitmq với queue riêng là inventory_queue
+  const rmqUrl =
+    process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
+  const queue = process.env.INVENTORY_QUEUE || 'inventory_queue';
+
+  //- tạo microservice lắng nghe qua rabbitmq với queue cấu hình từ biến môi trường
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     InventoryServiceModule,
     {
       transport: Transport.RMQ,
       options: {
-        urls: ['amqp://guest:guest@localhost:5672'],
-        queue: 'inventory_queue', //- queue nhận các yêu cầu kiểm tra tồn kho
+        urls: [rmqUrl],
+        queue, //- queue nhận các yêu cầu kiểm tra tồn kho
         queueOptions: {
           durable: true,
         },
@@ -20,7 +24,7 @@ async function bootstrap() {
 
   await app.listen();
   console.log(
-    '🚀 Inventory Microservice (RabbitMQ) đang lắng nghe trên queue [inventory_queue]...',
+    `🚀 Inventory Microservice (RabbitMQ) đang lắng nghe trên queue [${queue}]...`,
   );
 }
 

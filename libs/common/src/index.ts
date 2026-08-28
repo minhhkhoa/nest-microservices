@@ -32,6 +32,9 @@ export * from './redis/redis.module';
 //- export utils dùng chung
 export * from './utils';
 
+//- export constants dùng chung
+export * from './constants/rbac.constant';
+
 //- export file & storage utilities
 export * from './file/interfaces/storage.interface';
 export * from './file/config/multer.config';

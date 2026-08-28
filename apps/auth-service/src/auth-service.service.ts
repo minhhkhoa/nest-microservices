@@ -1,11 +1,13 @@
 import {
   BaseServiceAbstract,
+  ROLE_CUSTOMER,
   RegisterDto,
   User,
   comparePassword,
   hashPassword,
 } from '@app/common';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { RoleRepository } from './repositories/role.repository';
 import { UserRepository } from './repositories/user.repository';
 
@@ -15,6 +17,7 @@ export class AuthService extends BaseServiceAbstract<User> {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly configService: ConfigService,
   ) {
     super(userRepository);
   }
@@ -40,7 +43,7 @@ export class AuthService extends BaseServiceAbstract<User> {
     return result;
   }
 
-  //- đăng ký tài khoản mới
+  //- đăng ký tài khoản mới (mặc định luôn gán vai trò customer)
   async register(registerDto: RegisterDto) {
     const existing = await this.userRepository.findOne({
       where: { email: registerDto.email },
@@ -52,15 +55,20 @@ export class AuthService extends BaseServiceAbstract<User> {
     //- băm mật khẩu
     const hashedPassword = await hashPassword(registerDto.password);
 
-    //- tìm role mặc định nếu không truyền lên
-    const roleCode = registerDto.roleCode || 'CUSTOMER';
-    let role = await this.roleRepository.findOne({ where: { code: roleCode } });
+    //- luôn gán vai trò mặc định là customer để bảo mật chống leo thang đặc quyền
+    const customerRoleCode =
+      this.configService.get<string>('DEFAULT_CUSTOMER_ROLE') || ROLE_CUSTOMER;
+
+    let role = await this.roleRepository.findOne({
+      where: { code: customerRoleCode },
+    });
+
     if (!role) {
-      //- nếu chưa có thì tự khởi tạo role
+      //- nếu chưa có thì khởi tạo role customer
       role = await this.roleRepository.create({
-        code: roleCode,
-        name: roleCode,
-        description: '',
+        code: customerRoleCode,
+        name: 'Khách hàng',
+        description: 'Người dùng mua sắm và tạo đơn hàng',
         permissions: [],
       });
     }

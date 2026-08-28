@@ -19,7 +19,10 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: order_db
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   # - dịch vụ redis cache lưu trữ tạm và tối ưu truy vấn
   redis:
@@ -31,6 +34,15 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
+  # - giao diện web quản trị cơ sở dữ liệu postgresql (adminer)
+  adminer:
+    image: adminer:latest
+    container_name: adminer_microservices
+    ports:
+      - '8080:8080'   # mở trình duyệt http://localhost:8080 để xem database
+    restart: unless-stopped
+
 volumes:
-  # - lưu trữ dữ liệu redis bền vững
+  # - lưu trữ dữ liệu postgresql và redis bền vững
+  postgres_data:
   redis_data:

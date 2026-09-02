@@ -1,3 +1,4 @@
+import { RpcExceptionFilter } from '@app/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AuthModule } from './auth-service.module';
@@ -16,6 +17,10 @@ async function bootstrap() {
       },
     },
   );
+
+  //- áp dụng filter bắt lỗi và ghi log tập trung cho rpc microservice
+  app.useGlobalFilters(new RpcExceptionFilter());
+
   await app.listen();
   console.log(`🚀 Auth Microservice (TCP) đang lắng nghe tại ${host}:${port}`);
 }

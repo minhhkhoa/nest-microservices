@@ -1,25 +1,17 @@
-import {
-  BaseServiceAbstract,
-  CreateRoleDto,
-  Permission,
-  Role,
-  UpdateRoleDto,
-} from '@app/common';
+import { CreateRoleDto, Permission, Role, UpdateRoleDto } from '@app/common';
 import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
 import { PermissionRepository } from '../repositories/permission.repository';
 import { RoleRepository } from '../repositories/role.repository';
 
-//- service xử lý nghiệp vụ vai trò kế thừa base service abstract
+//- service xử lý nghiệp vụ vai trò điều phối trực tiếp role và permission repository
 @Injectable()
-export class RolesService extends BaseServiceAbstract<Role> {
+export class RolesService {
   constructor(
     private readonly roleRepository: RoleRepository,
     private readonly permissionRepository: PermissionRepository,
-  ) {
-    super(roleRepository);
-  }
+  ) {}
 
   //- tạo vai trò mới kèm gán danh sách quyền hạn
   async createRole(dto: CreateRoleDto): Promise<Role> {
@@ -56,7 +48,7 @@ export class RolesService extends BaseServiceAbstract<Role> {
         relations: ['permissions'],
       },
     };
-    return await this.findAll(finalCondition);
+    return await this.roleRepository.findAll(finalCondition);
   }
 
   //- tìm chi tiết vai trò theo id kèm danh sách quyền
@@ -96,5 +88,15 @@ export class RolesService extends BaseServiceAbstract<Role> {
     }
 
     return await this.roleRepository.save(role);
+  }
+
+  //- xóa mềm một hoặc nhiều vai trò theo id / mảng ids
+  async deleteRole(ids: string | string[]): Promise<boolean> {
+    return await this.roleRepository.softDelete(ids);
+  }
+
+  //- khôi phục một hoặc nhiều vai trò đã xóa mềm theo id / mảng ids
+  async restoreRole(ids: string | string[]): Promise<boolean> {
+    return await this.roleRepository.restore(ids);
   }
 }

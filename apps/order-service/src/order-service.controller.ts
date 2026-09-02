@@ -19,24 +19,38 @@ export class OrderServiceController {
   async getOrders(
     @Payload() condition?: ConditionQuery<Order>,
   ): Promise<FindAllResponse<Order>> {
-    return await this.orderService.findAll(condition);
+    return await this.orderService.getOrders(condition);
   }
 
   //- lấy chi tiết đơn hàng theo id
   @MessagePattern({ cmd: 'get_order_by_id' })
-  async getOrderById(@Payload() data: { id: number }): Promise<Order> {
-    return await this.orderService.findByIdOrFail(data.id);
+  async getOrderById(@Payload() data: { id: string }): Promise<Order> {
+    return await this.orderService.getOrderById(data.id);
   }
 
-  //- xóa mềm đơn hàng
+  //- xóa mềm một hoặc nhiều đơn hàng (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'delete_order' })
-  async deleteOrder(@Payload() data: { id: number }): Promise<boolean> {
-    return await this.orderService.remove(data.id);
+  async deleteOrder(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ): Promise<boolean> {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.orderService.deleteOrder(ids);
   }
 
-  //- khôi phục đơn hàng đã xóa mềm
+  //- khôi phục một hoặc nhiều đơn hàng đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'restore_order' })
-  async restoreOrder(@Payload() data: { id: number }): Promise<boolean> {
-    return await this.orderService.restore(data.id);
+  async restoreOrder(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ): Promise<boolean> {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.orderService.restoreOrder(ids);
   }
 }

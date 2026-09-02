@@ -11,10 +11,13 @@ import {
 //- khai báo entity order tương ứng với bảng orders trong postgresql
 @Entity('orders')
 export class Order {
-  //- khóa chính tự động tăng
-  @ApiProperty({ description: 'ID định danh đơn hàng', example: 1 })
-  @PrimaryGeneratedColumn()
-  id: number;
+  //- khóa chính uuid tự động sinh
+  @ApiProperty({
+    description: 'ID định danh đơn hàng (UUID)',
+    example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  })
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   //- tên sản phẩm
   @ApiProperty({ description: 'Tên sản phẩm', example: 'Laptop Dell XPS 15' })

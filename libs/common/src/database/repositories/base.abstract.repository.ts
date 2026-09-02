@@ -70,12 +70,28 @@ export abstract class BaseAbstractRepository<
     id: string | number,
     options?: FindOneOptions<T>,
   ): Promise<T | null> {
-    const where = { id } as unknown as FindOptionsWhere<T>;
+    const idCondition = { id } as unknown as FindOptionsWhere<T>;
+
+    let whereCondition: FindOptionsWhere<T> | FindOptionsWhere<T>[] =
+      idCondition;
+
+    if (options?.where) {
+      if (Array.isArray(options.where)) {
+        whereCondition = options.where.map((item) => ({
+          ...item,
+          ...idCondition,
+        }));
+      } else {
+        whereCondition = {
+          ...options.where,
+          ...idCondition,
+        };
+      }
+    }
+
     return await this.repository.findOne({
       ...options,
-      where: options?.where
-        ? { ...(options.where as object), ...where }
-        : where,
+      where: whereCondition,
     });
   }
 

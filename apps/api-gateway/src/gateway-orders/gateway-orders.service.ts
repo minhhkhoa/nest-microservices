@@ -30,23 +30,23 @@ export class GatewayOrdersService {
   }
 
   //- lấy chi tiết đơn hàng theo id
-  async getOrderById(id: number): Promise<Order> {
+  async getOrderById(id: string): Promise<Order> {
     return await firstValueFrom(
       this.orderClient.send({ cmd: 'get_order_by_id' }, { id }),
     );
   }
 
-  //- xóa mềm đơn hàng
-  async deleteOrder(id: number): Promise<boolean> {
+  //- xóa mềm một hoặc nhiều đơn hàng (nhận 1 id hoặc mảng ids)
+  async deleteOrder(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'delete_order' }, { id }),
+      this.orderClient.send({ cmd: 'delete_order' }, { ids }),
     );
   }
 
-  //- khôi phục đơn hàng
-  async restoreOrder(id: number): Promise<boolean> {
+  //- khôi phục một hoặc nhiều đơn hàng đã xóa mềm (nhận 1 id hoặc mảng ids)
+  async restoreOrder(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'restore_order' }, { id }),
+      this.orderClient.send({ cmd: 'restore_order' }, { ids }),
     );
   }
 }

@@ -4,13 +4,15 @@ export * from './entities/auth/permission.entity';
 export * from './entities/auth/role.entity';
 export * from './entities/auth/user.entity';
 
-//- export decorators, guards & interceptors
+//- export decorators, guards, interceptors & filters
 export * from './decorators/customize.decorator';
 export * from './decorators/query.decorator';
 export * from './decorators/swagger.decorator';
 export * from './guards/permission.guard';
 export * from './interceptors/transform.interceptor';
 export * from './interceptors/logging.interceptor';
+export * from './filters/all-exceptions.filter';
+export * from './filters/rpc-exception.filter';
 
 //- export dtos
 export * from './dtos/order/create-order.dto';
@@ -24,7 +26,6 @@ export * from './database/database.module';
 export * from './database/interfaces/pagination.interface';
 export * from './database/interfaces/base-repository.interface';
 export * from './database/repositories/base.abstract.repository';
-export * from './database/services/base.abstract.service';
 export * from './redis/redis.interface';
 export * from './redis/redis.service';
 export * from './redis/redis.module';

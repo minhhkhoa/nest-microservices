@@ -53,17 +53,17 @@ export class GatewayRolesPermissionsService {
     );
   }
 
-  //- xóa mềm vai trò
-  async deleteRole(id: string): Promise<boolean> {
+  //- xóa mềm một hoặc nhiều vai trò
+  async deleteRole(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'role_delete' }, { id }),
+      this.authClient.send<boolean>({ cmd: 'role_delete' }, { ids }),
     );
   }
 
-  //- khôi phục vai trò
-  async restoreRole(id: string): Promise<boolean> {
+  //- khôi phục một hoặc nhiều vai trò
+  async restoreRole(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'role_restore' }, { id }),
+      this.authClient.send<boolean>({ cmd: 'role_restore' }, { ids }),
     );
   }
 
@@ -110,17 +110,17 @@ export class GatewayRolesPermissionsService {
     );
   }
 
-  //- xóa mềm quyền hạn
-  async deletePermission(id: string): Promise<boolean> {
+  //- xóa mềm một hoặc nhiều quyền hạn
+  async deletePermission(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'permission_delete' }, { id }),
+      this.authClient.send<boolean>({ cmd: 'permission_delete' }, { ids }),
     );
   }
 
-  //- khôi phục quyền hạn
-  async restorePermission(id: string): Promise<boolean> {
+  //- khôi phục một hoặc nhiều quyền hạn
+  async restorePermission(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'permission_restore' }, { id }),
+      this.authClient.send<boolean>({ cmd: 'permission_restore' }, { ids }),
     );
   }
 }

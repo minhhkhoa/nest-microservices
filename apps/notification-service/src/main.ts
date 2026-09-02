@@ -1,3 +1,4 @@
+import { RpcExceptionFilter } from '@app/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NotificationServiceModule } from './notification-service.module';
@@ -21,6 +22,9 @@ async function bootstrap() {
       },
     },
   );
+
+  //- áp dụng filter bắt lỗi và ghi log tập trung cho rpc microservice
+  app.useGlobalFilters(new RpcExceptionFilter());
 
   await app.listen();
   console.log(

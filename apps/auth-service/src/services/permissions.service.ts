@@ -1,18 +1,16 @@
 import {
-  BaseServiceAbstract,
   CreatePermissionDto,
   Permission,
   UpdatePermissionDto,
 } from '@app/common';
+import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PermissionRepository } from '../repositories/permission.repository';
 
-//- service xử lý nghiệp vụ quyền hạn kế thừa base service abstract
+//- service xử lý nghiệp vụ quyền hạn gọi trực tiếp permission repository
 @Injectable()
-export class PermissionsService extends BaseServiceAbstract<Permission> {
-  constructor(private readonly permissionRepository: PermissionRepository) {
-    super(permissionRepository);
-  }
+export class PermissionsService {
+  constructor(private readonly permissionRepository: PermissionRepository) {}
 
   //- tạo quyền hạn mới
   async createPermission(dto: CreatePermissionDto): Promise<Permission> {
@@ -23,7 +21,7 @@ export class PermissionsService extends BaseServiceAbstract<Permission> {
       throw new BadRequestException(`Mã quyền hạn [${dto.code}] đã tồn tại!`);
     }
 
-    return await this.create({
+    return await this.permissionRepository.create({
       code: dto.code,
       name: dto.name,
       apiPath: dto.apiPath,
@@ -32,12 +30,24 @@ export class PermissionsService extends BaseServiceAbstract<Permission> {
     });
   }
 
+  //- lấy danh sách quyền hạn phân trang và tìm kiếm
+  async findAllPermissions(
+    condition?: ConditionQuery<Permission>,
+  ): Promise<FindAllResponse<Permission>> {
+    return await this.permissionRepository.findAll(condition);
+  }
+
+  //- lấy chi tiết quyền hạn theo id
+  async findPermissionById(id: string): Promise<Permission> {
+    return await this.permissionRepository.findByIdOrFail(id);
+  }
+
   //- cập nhật quyền hạn
   async updatePermission(
     id: string,
     dto: UpdatePermissionDto,
   ): Promise<Permission> {
-    const perm = await this.findByIdOrFail(id);
+    const perm = await this.permissionRepository.findByIdOrFail(id);
 
     if (dto.code && dto.code !== perm.code) {
       const existing = await this.permissionRepository.findOne({
@@ -55,5 +65,15 @@ export class PermissionsService extends BaseServiceAbstract<Permission> {
     if (dto.module) perm.module = dto.module.toUpperCase();
 
     return await this.permissionRepository.save(perm);
+  }
+
+  //- xóa mềm một hoặc nhiều quyền hạn theo id / mảng ids
+  async deletePermission(ids: string | string[]): Promise<boolean> {
+    return await this.permissionRepository.softDelete(ids);
+  }
+
+  //- khôi phục một hoặc nhiều quyền hạn đã xóa mềm theo id / mảng ids
+  async restorePermission(ids: string | string[]): Promise<boolean> {
+    return await this.permissionRepository.restore(ids);
   }
 }

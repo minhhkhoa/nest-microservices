@@ -1,5 +1,4 @@
 import {
-  BaseServiceAbstract,
   ROLE_CUSTOMER,
   RegisterDto,
   User,
@@ -11,16 +10,14 @@ import { ConfigService } from '@nestjs/config';
 import { RoleRepository } from './repositories/role.repository';
 import { UserRepository } from './repositories/user.repository';
 
-//- service xử lý xác thực và tài khoản kế thừa base service abstract
+//- service xử lý xác thực và tài khoản người dùng
 @Injectable()
-export class AuthService extends BaseServiceAbstract<User> {
+export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
     private readonly configService: ConfigService,
-  ) {
-    super(userRepository);
-  }
+  ) {}
 
   //- kiểm tra email và mật khẩu khi đăng nhập
   async validateUser(

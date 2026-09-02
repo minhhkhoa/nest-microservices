@@ -5,6 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { match } from 'path-to-regexp';
 import { ROLE_ADMIN } from '../constants/rbac.constant';
 import {
   IS_PUBLIC_KEY,
@@ -15,6 +16,8 @@ import { User } from '../entities/auth/user.entity';
 interface AuthenticatedRequest {
   user?: User;
   method: string;
+  url?: string;
+  originalUrl?: string;
   route?: { path: string };
 }
 
@@ -55,23 +58,46 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
-    //- lấy method và đường dẫn route hiện tại
+    //- lấy method và đường dẫn pathname thực tế (loại bỏ query params)
     const method = request.method.toUpperCase();
-    const routePath = request.route?.path; //- dạng /api/v1/users/:id
+    const actualPath = (
+      request.originalUrl ||
+      request.url ||
+      request.route?.path ||
+      ''
+    ).split('?')[0];
 
-    //- bypass mặc định cho các route /api/auth
-    if (routePath?.startsWith('/api/auth') || routePath?.startsWith('/auth')) {
+    //- bypass mặc định cho các route /api/auth hoặc /auth
+    if (actualPath.startsWith('/api/auth') || actualPath.startsWith('/auth')) {
       return true;
     }
 
-    //- so khớp quyền từ danh sách permissions của user
+    //- so khớp quyền từ danh sách permissions của user bằng path-to-regexp
     const permissions = user.role?.permissions || [];
 
-    const hasPermission = permissions.some(
-      (p) =>
-        p.method.toUpperCase() === method &&
-        p.apiPath.toLowerCase() === routePath?.toLowerCase(),
-    );
+    const hasPermission = permissions.some((p) => {
+      if (p.method.toUpperCase() !== method) return false;
+
+      //- so khớp chính xác chuỗi hoặc qua route param pattern /orders/:id
+      try {
+        const matcher = match(p.apiPath, { decode: decodeURIComponent });
+        if (matcher(actualPath)) return true;
+      } catch {
+        //- bỏ qua nếu format regex pattern bị lỗi
+      }
+
+      //- fallback so khớp với route template nếu có (vd: request.route.path)
+      if (request.route?.path) {
+        try {
+          const routeMatcher = match(p.apiPath, { decode: decodeURIComponent });
+          if (routeMatcher(request.route.path)) return true;
+        } catch {
+          //- bỏ qua lỗi format
+        }
+      }
+
+      return p.apiPath.toLowerCase() === actualPath.toLowerCase();
+    });
 
     if (!hasPermission) {
       throw new ForbiddenException(

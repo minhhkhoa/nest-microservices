@@ -1,4 +1,5 @@
 import {
+  AllExceptionsFilter,
   LoggingInterceptor,
   PermissionGuard,
   RedisModule,
@@ -6,7 +7,7 @@ import {
 } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { GatewayAuthModule } from './gateway-auth/gateway-auth.module';
 import { GatewayJwtAuthGuard } from './gateway-auth/guards/gateway-jwt-auth.guard';
 import { GatewayOrdersModule } from './gateway-orders/gateway-orders.module';
@@ -33,6 +34,11 @@ import { GatewayStorageModule } from './gateway-storage/gateway-storage.module';
     GatewayStorageModule,
   ],
   providers: [
+    //- đăng ký global exception filter: bắt mọi ngoại lệ và ghi log lỗi tập trung
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
     //- đăng ký global guards: jwt chạy trước, permission guard chạy sau
     {
       provide: APP_GUARD,

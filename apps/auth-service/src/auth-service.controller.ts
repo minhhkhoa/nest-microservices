@@ -68,16 +68,30 @@ export class AuthController {
     return await this.rolesService.updateRole(data.id, data.dto);
   }
 
-  //- xóa mềm vai trò
+  //- xóa mềm một hoặc nhiều vai trò (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'role_delete' })
-  async deleteRole(@Payload() data: { id: string }) {
-    return await this.rolesService.remove(data.id);
+  async deleteRole(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ) {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.rolesService.deleteRole(ids);
   }
 
-  //- khôi phục vai trò đã xóa mềm
+  //- khôi phục một hoặc nhiều vai trò đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'role_restore' })
-  async restoreRole(@Payload() data: { id: string }) {
-    return await this.rolesService.restore(data.id);
+  async restoreRole(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ) {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.rolesService.restoreRole(ids);
   }
 
   // ================= PERMISSION PATTERNS =================
@@ -90,13 +104,13 @@ export class AuthController {
   //- lấy danh sách quyền hạn phân trang và tìm kiếm
   @MessagePattern({ cmd: 'permission_find_all' })
   async getPermissions(@Payload() condition?: ConditionQuery<Permission>) {
-    return await this.permissionsService.findAll(condition);
+    return await this.permissionsService.findAllPermissions(condition);
   }
 
   //- lấy chi tiết quyền hạn theo id
   @MessagePattern({ cmd: 'permission_find_by_id' })
   async getPermissionById(@Payload() data: { id: string }) {
-    return await this.permissionsService.findByIdOrFail(data.id);
+    return await this.permissionsService.findPermissionById(data.id);
   }
 
   //- cập nhật quyền hạn
@@ -107,15 +121,29 @@ export class AuthController {
     return await this.permissionsService.updatePermission(data.id, data.dto);
   }
 
-  //- xóa mềm quyền hạn
+  //- xóa mềm một hoặc nhiều quyền hạn (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'permission_delete' })
-  async deletePermission(@Payload() data: { id: string }) {
-    return await this.permissionsService.remove(data.id);
+  async deletePermission(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ) {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.permissionsService.deletePermission(ids);
   }
 
-  //- khôi phục quyền hạn đã xóa mềm
+  //- khôi phục một hoặc nhiều quyền hạn đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
   @MessagePattern({ cmd: 'permission_restore' })
-  async restorePermission(@Payload() data: { id: string }) {
-    return await this.permissionsService.restore(data.id);
+  async restorePermission(
+    @Payload()
+    data: { id?: string | string[]; ids?: string[] } | string | string[],
+  ) {
+    const ids =
+      typeof data === 'object' && !Array.isArray(data)
+        ? (data.ids ?? data.id ?? [])
+        : data;
+    return await this.permissionsService.restorePermission(ids);
   }
 }

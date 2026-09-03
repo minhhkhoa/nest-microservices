@@ -43,32 +43,22 @@ export class AuthController {
     return await this.authService.getUserWithPermissions(data.id);
   }
 
-  //- cập nhật refresh token đã băm vào cơ sở dữ liệu
-  @MessagePattern({ cmd: 'auth_update_refresh_token' })
-  async updateRefreshToken(
-    @Payload() data: { userId: string; refreshToken: string | null },
-  ) {
-    return await this.authService.updateRefreshToken(
-      data.userId,
-      data.refreshToken,
-    );
+  //- đăng nhập và sinh cặp token cho tài khoản
+  @MessagePattern({ cmd: 'auth_login' })
+  async login(@Payload() data: { userId: string }) {
+    return await this.authService.login(data.userId);
   }
 
-  //- xác thực và đối soát refresh token của người dùng
-  @MessagePattern({ cmd: 'auth_validate_refresh_token' })
-  async validateRefreshToken(
-    @Payload() data: { userId: string; refreshToken: string },
-  ) {
-    return await this.authService.validateRefreshToken(
-      data.userId,
-      data.refreshToken,
-    );
+  //- làm mới access token và xoay vòng refresh token
+  @MessagePattern({ cmd: 'auth_refresh_token' })
+  async refreshTokens(@Payload() data: { refreshToken: string }) {
+    return await this.authService.refreshTokens(data.refreshToken);
   }
 
-  //- thu hồi refresh token trong cơ sở dữ liệu khi đăng xuất
-  @MessagePattern({ cmd: 'auth_revoke_refresh_token' })
-  async revokeRefreshToken(@Payload() data: { userId: string }) {
-    return await this.authService.revokeRefreshToken(data.userId);
+  //- đăng xuất tài khoản, thu hồi refresh token và đưa access token vào redis blacklist
+  @MessagePattern({ cmd: 'auth_logout' })
+  async logout(@Payload() data: { userId: string; accessToken?: string }) {
+    return await this.authService.logout(data.userId, data.accessToken);
   }
 
   // ================= ROLE PATTERNS =================

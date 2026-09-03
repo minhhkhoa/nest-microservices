@@ -43,6 +43,34 @@ export class AuthController {
     return await this.authService.getUserWithPermissions(data.id);
   }
 
+  //- cập nhật refresh token đã băm vào cơ sở dữ liệu
+  @MessagePattern({ cmd: 'auth_update_refresh_token' })
+  async updateRefreshToken(
+    @Payload() data: { userId: string; refreshToken: string | null },
+  ) {
+    return await this.authService.updateRefreshToken(
+      data.userId,
+      data.refreshToken,
+    );
+  }
+
+  //- xác thực và đối soát refresh token của người dùng
+  @MessagePattern({ cmd: 'auth_validate_refresh_token' })
+  async validateRefreshToken(
+    @Payload() data: { userId: string; refreshToken: string },
+  ) {
+    return await this.authService.validateRefreshToken(
+      data.userId,
+      data.refreshToken,
+    );
+  }
+
+  //- thu hồi refresh token trong cơ sở dữ liệu khi đăng xuất
+  @MessagePattern({ cmd: 'auth_revoke_refresh_token' })
+  async revokeRefreshToken(@Payload() data: { userId: string }) {
+    return await this.authService.revokeRefreshToken(data.userId);
+  }
+
   // ================= ROLE PATTERNS =================
   //- tạo vai trò mới
   @MessagePattern({ cmd: 'role_create' })

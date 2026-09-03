@@ -1,10 +1,14 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { ApiGatewayModule } from './api-gateway.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
+
+  //- kích hoạt cookie-parser để trích xuất cookie từ request client (như refresh_token)
+  app.use(cookieParser());
 
   //- bật validation pipe toàn cục để tự động kiểm tra dữ liệu đầu vào theo rule trong dto
   app.useGlobalPipes(

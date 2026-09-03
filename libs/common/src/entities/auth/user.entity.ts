@@ -56,8 +56,8 @@ export class User {
   role: Role;
 
   @ApiHideProperty()
-  @Column({ nullable: true })
-  refreshToken: string;
+  @Column({ type: 'text', nullable: true })
+  refreshToken: string | null;
 
   @ApiProperty({
     description: 'Trạng thái hoạt động của tài khoản',

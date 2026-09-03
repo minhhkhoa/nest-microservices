@@ -23,7 +23,7 @@ export class AuthService {
   async validateUser(
     email: string,
     pass: string,
-  ): Promise<Omit<User, 'password'> | null> {
+  ): Promise<Omit<User, 'password' | 'refreshToken'> | null> {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['role'],
@@ -35,8 +35,12 @@ export class AuthService {
     const isMatch = await comparePassword(pass, user.password);
     if (!isMatch) return null;
 
-    //- loại bỏ password trước khi trả về
-    const { password: _password, ...result } = user;
+    //- loại bỏ password và refresh token nhạy cảm trước khi trả về
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...result
+    } = user;
     return result;
   }
 
@@ -77,15 +81,75 @@ export class AuthService {
       role: role,
     });
 
-    const { password: _password, ...result } = saved;
+    //- loại bỏ password và refresh token trước khi trả về
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...result
+    } = saved;
     return result;
   }
 
   //- lấy thông tin user kèm đầy đủ role và permissions (dùng cho jwt strategy)
   async getUserWithPermissions(userId: string) {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['role', 'role.permissions'],
     });
+
+    if (!user) return null;
+
+    //- loại bỏ password và refresh token trước khi trả về
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...result
+    } = user;
+    return result;
+  }
+
+  //- cập nhật refresh token đã băm vào database hoặc gán null khi đăng xuất
+  async updateRefreshToken(userId: string, refreshToken: string | null) {
+    let hashedRefreshToken: string | null = null;
+    if (refreshToken) {
+      //- băm refresh token bằng bcrypt để bảo mật cơ sở dữ liệu
+      hashedRefreshToken = await hashPassword(refreshToken);
+    }
+
+    await this.userRepository.update(userId, {
+      refreshToken: hashedRefreshToken,
+    });
+    return { success: true };
+  }
+
+  //- xác thực và đối soát refresh token khi client gửi yêu cầu refresh
+  async validateRefreshToken(userId: string, refreshToken: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['role', 'role.permissions'],
+    });
+
+    //- nếu người dùng không tồn tại, bị khóa hoặc chưa có refresh token trong db
+    if (!user || !user.isActive || !user.refreshToken) {
+      return null;
+    }
+
+    //- so khớp refresh token client gửi lên với chuỗi băm trong db
+    const isMatch = await comparePassword(refreshToken, user.refreshToken);
+    if (!isMatch) {
+      return null;
+    }
+
+    //- loại bỏ thông tin nhạy cảm trước khi trả về
+    const { password: _password, refreshToken: _rt, ...result } = user;
+    return result;
+  }
+
+  //- thu hồi refresh token của người dùng trong db (đăng xuất)
+  async revokeRefreshToken(userId: string) {
+    await this.userRepository.update(userId, {
+      refreshToken: null,
+    });
+    return { success: true };
   }
 }

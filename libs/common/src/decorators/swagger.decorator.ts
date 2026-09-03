@@ -139,21 +139,18 @@ export function ApiPaginationQuery() {
       required: false,
       type: String,
       description: 'Sắp xếp theo trường (vd: createdAt:DESC)',
-      example: 'createdAt:DESC',
     }),
     ApiQuery({
       name: 'keywords',
       required: false,
       type: String,
       description: 'Từ khóa tìm kiếm (chuỗi hoặc mảng JSON)',
-      example: '["keyword"]',
     }),
     ApiQuery({
       name: 'fields',
       required: false,
       type: String,
       description: 'Danh sách trường tìm kiếm (dạng mảng JSON)',
-      example: '["name"]',
     }),
   );
 }

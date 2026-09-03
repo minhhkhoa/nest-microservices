@@ -130,3 +130,14 @@ export class CreatePermissionDto {
 }
 
 export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {}
+
+//- dto chứa refresh token khi client gửi qua request body thay vì cookie
+export class RefreshTokenDto {
+  @ApiPropertyOptional({
+    description: 'Refresh token chuỗi jwt (khi không sử dụng cookie httponly)',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  @IsOptional()
+  @IsString({ message: 'Refresh token phải là chuỗi' })
+  refreshToken?: string;
+}

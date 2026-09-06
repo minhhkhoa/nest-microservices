@@ -5,7 +5,7 @@ import {
   RedisService,
   SERVICES,
 } from '@app/common';
-import type { IUserPayload } from '@app/common';
+import type { IUserPayload, IUserPermission, IUserRole } from '@app/common';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
@@ -59,45 +59,116 @@ export class GatewayJwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token không hợp lệ (thiếu user id)');
     }
 
-    //- bước 1: thử lấy thông tin user kèm quyền hạn từ redis cache
-    let user: IUserPayload | null = null;
+    //- bước 1: thử lấy thông tin user profile từ redis cache (tầng 1)
+    let userProfile: IUserPayload | null = null;
     try {
-      user = await this.redisService.getJson<IUserPayload>(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS(userId),
+      userProfile = await this.redisService.getJson<IUserPayload>(
+        REDIS_KEYS.AUTH.USER(userId),
       );
     } catch {
-      //- nếu redis gặp sự cố, bỏ qua lỗi để fallback gọi tcp sang auth-service
+      //- nếu redis gặp sự cố, bỏ qua để fallback sang tcp gọi auth-service
     }
 
-    //- bước 2: nếu cache miss, gọi sang auth-service qua tcp và nạp lại vào cache redis
-    if (!user) {
-      user = await firstValueFrom(
-        this.authClient.send<IUserPayload | null>(
-          { cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS },
-          { id: userId },
-        ),
-      );
+    //- nếu tìm thấy user profile trong redis cache
+    if (userProfile) {
+      if (!userProfile.isActive) {
+        throw new UnauthorizedException(
+          'Người dùng không tồn tại hoặc đã bị khóa',
+        );
+      }
 
-      //- nếu tìm thấy user hợp lệ, ghi vào redis cache với ttl định sẵn
-      if (user && user.isActive) {
+      const roleCode = userProfile.role?.code;
+      let permissions: IUserPermission[] | null = null;
+
+      //- bước 2: thử lấy danh sách quyền hạn của vai trò từ redis cache (tầng 2)
+      if (roleCode) {
         try {
-          await this.redisService.setJson(
-            REDIS_KEYS.AUTH.USER_PERMISSIONS(userId),
-            user,
-            REDIS_TTL.USER_PERMISSIONS,
+          permissions = await this.redisService.getJson<IUserPermission[]>(
+            REDIS_KEYS.AUTH.ROLE_PERMISSIONS(roleCode),
           );
         } catch {
-          //- bỏ qua nếu ghi redis cache thất bại
+          //- bỏ qua nếu redis gặp sự cố
+        }
+
+        //- nếu cache miss danh sách quyền (do admin vừa sửa role), gọi tcp lấy riêng quyền của role đó
+        if (!permissions) {
+          try {
+            permissions = await firstValueFrom(
+              this.authClient.send<IUserPermission[]>(
+                { cmd: CMD_PATTERNS.ROLE.GET_PERMISSIONS_BY_CODE },
+                { code: roleCode },
+              ),
+            );
+
+            if (permissions) {
+              await this.redisService.setJson(
+                REDIS_KEYS.AUTH.ROLE_PERMISSIONS(roleCode),
+                permissions,
+                REDIS_TTL.ROLE_PERMISSIONS,
+              );
+            }
+          } catch {
+            permissions = [];
+          }
         }
       }
+
+      //- ghép user profile và danh sách quyền thành đối tượng user hoàn chỉnh
+      return {
+        ...userProfile,
+        role: {
+          ...userProfile.role,
+          permissions: permissions || [],
+        },
+      };
     }
 
-    if (!user || !user.isActive) {
+    //- bước 3: nếu cache miss toàn bộ user profile, gọi sang auth-service qua tcp và nạp cả 2 tầng cache
+    const fullUser = await firstValueFrom(
+      this.authClient.send<IUserPayload | null>(
+        { cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS },
+        { id: userId },
+      ),
+    );
+
+    if (!fullUser || !fullUser.isActive) {
       throw new UnauthorizedException(
         'Người dùng không tồn tại hoặc đã bị khóa',
       );
     }
 
-    return user; //- gắn vào req.user để permission.guard sử dụng
+    //- nạp dữ liệu vào redis theo mô hình 2 tầng
+    try {
+      const { role, ...rest } = fullUser;
+      const rolePermissions = role?.permissions || [];
+      const cleanRole: IUserRole = {
+        ...role,
+        permissions: [], //- tầng user profile không cần lưu mảng permissions để tiết kiệm dung lượng
+      };
+      const cleanUserProfile: IUserPayload = {
+        ...rest,
+        role: cleanRole,
+      };
+
+      //- lưu tầng 1: user profile (ttl 15 phút)
+      await this.redisService.setJson(
+        REDIS_KEYS.AUTH.USER(userId),
+        cleanUserProfile,
+        REDIS_TTL.USER_PROFILE,
+      );
+
+      //- lưu tầng 2: role permissions (ttl 24 giờ)
+      if (role?.code) {
+        await this.redisService.setJson(
+          REDIS_KEYS.AUTH.ROLE_PERMISSIONS(role.code),
+          rolePermissions,
+          REDIS_TTL.ROLE_PERMISSIONS,
+        );
+      }
+    } catch {
+      //- bỏ qua nếu ghi redis cache thất bại
+    }
+
+    return fullUser; //- gắn vào req.user để permission.guard sử dụng
   }
 }

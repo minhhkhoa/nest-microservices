@@ -81,6 +81,12 @@ export class AuthController {
     return await this.rolesService.findRoleById(data.id);
   }
 
+  //- lấy danh sách quyền hạn theo mã vai trò
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.GET_PERMISSIONS_BY_CODE })
+  async getPermissionsByRoleCode(@Payload() data: { code: string }) {
+    return await this.rolesService.getPermissionsByRoleCode(data.code);
+  }
+
   //- cập nhật vai trò
   @MessagePattern({ cmd: CMD_PATTERNS.ROLE.UPDATE })
   async updateRole(@Payload() data: { id: string; dto: UpdateRoleDto }) {

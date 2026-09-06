@@ -71,10 +71,10 @@ export class PermissionsService {
 
     const saved = await this.permissionRepository.save(perm);
 
-    //- xóa toàn bộ cache user permissions trên redis để các user cập nhật quyền tức thì
+    //- xóa cache danh sách quyền của các vai trò trên redis (chỉ xóa cache role, giữ nguyên cache user)
     try {
       await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+        REDIS_KEYS.AUTH.ROLE_PERMISSIONS_PREFIX,
       );
     } catch {
       //- bỏ qua nếu redis gặp sự cố
@@ -87,10 +87,10 @@ export class PermissionsService {
   async deletePermission(ids: string | string[]): Promise<boolean> {
     const result = await this.permissionRepository.softDelete(ids);
 
-    //- xóa cache user permissions trên redis
+    //- xóa cache danh sách quyền của các vai trò trên redis
     try {
       await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+        REDIS_KEYS.AUTH.ROLE_PERMISSIONS_PREFIX,
       );
     } catch {
       //- bỏ qua nếu redis gặp sự cố
@@ -103,10 +103,10 @@ export class PermissionsService {
   async restorePermission(ids: string | string[]): Promise<boolean> {
     const result = await this.permissionRepository.restore(ids);
 
-    //- xóa cache user permissions trên redis
+    //- xóa cache danh sách quyền của các vai trò trên redis
     try {
       await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+        REDIS_KEYS.AUTH.ROLE_PERMISSIONS_PREFIX,
       );
     } catch {
       //- bỏ qua nếu redis gặp sự cố

@@ -66,9 +66,19 @@ export class RolesService {
     });
   }
 
+  //- lấy danh sách quyền hạn theo mã vai trò phục vụ nạp cache redis tại api gateway
+  async getPermissionsByRoleCode(code: string): Promise<Permission[]> {
+    const role = await this.roleRepository.findOne({
+      where: { code: code.toUpperCase() },
+      relations: ['permissions'],
+    });
+    return role?.permissions || [];
+  }
+
   //- cập nhật thông tin vai trò và danh sách quyền hạn
   async updateRole(id: string, dto: UpdateRoleDto): Promise<Role> {
     const role = await this.findRoleById(id);
+    const oldCode = role.code;
 
     //- kiểm tra nếu đổi mã vai trò thì không được trùng với vai trò khác
     if (dto.code && dto.code !== role.code) {
@@ -97,11 +107,12 @@ export class RolesService {
 
     const saved = await this.roleRepository.save(role);
 
-    //- xóa toàn bộ cache user permissions trên redis để các user mang role này cập nhật quyền tức thì
+    //- chỉ xóa đúng key cache role permissions của vai trò này trên redis
     try {
-      await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
-      );
+      await this.redisService.del(REDIS_KEYS.AUTH.ROLE_PERMISSIONS(saved.code));
+      if (oldCode && oldCode !== saved.code) {
+        await this.redisService.del(REDIS_KEYS.AUTH.ROLE_PERMISSIONS(oldCode));
+      }
     } catch {
       //- bỏ qua nếu redis gặp sự cố
     }
@@ -111,13 +122,20 @@ export class RolesService {
 
   //- xóa mềm một hoặc nhiều vai trò theo id / mảng ids
   async deleteRole(ids: string | string[]): Promise<boolean> {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    const roles = await this.roleRepository.findByCondition({
+      where: { id: In(idArray) },
+    });
+
     const result = await this.roleRepository.softDelete(ids);
 
-    //- xóa cache user permissions trên redis
+    //- xóa cache role permissions của các vai trò bị xóa
     try {
-      await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
-      );
+      for (const r of roles) {
+        if (r.code) {
+          await this.redisService.del(REDIS_KEYS.AUTH.ROLE_PERMISSIONS(r.code));
+        }
+      }
     } catch {
       //- bỏ qua nếu redis gặp sự cố
     }
@@ -127,13 +145,21 @@ export class RolesService {
 
   //- khôi phục một hoặc nhiều vai trò đã xóa mềm theo id / mảng ids
   async restoreRole(ids: string | string[]): Promise<boolean> {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    const roles = await this.roleRepository.findByCondition({
+      where: { id: In(idArray) },
+      withDeleted: true,
+    });
+
     const result = await this.roleRepository.restore(ids);
 
-    //- xóa cache user permissions trên redis
+    //- xóa cache role permissions để nạp lại khi có truy vấn
     try {
-      await this.redisService.delByPattern(
-        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
-      );
+      for (const r of roles) {
+        if (r.code) {
+          await this.redisService.del(REDIS_KEYS.AUTH.ROLE_PERMISSIONS(r.code));
+        }
+      }
     } catch {
       //- bỏ qua nếu redis gặp sự cố
     }

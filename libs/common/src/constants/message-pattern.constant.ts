@@ -20,6 +20,7 @@ export const CMD_PATTERNS = {
     CREATE: 'role_create',
     FIND_ALL: 'role_find_all',
     FIND_BY_ID: 'role_find_by_id',
+    GET_PERMISSIONS_BY_CODE: 'role_get_permissions_by_code',
     UPDATE: 'role_update',
     DELETE: 'role_delete',
     RESTORE: 'role_restore',

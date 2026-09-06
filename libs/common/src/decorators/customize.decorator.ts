@@ -16,6 +16,8 @@ export const PublicPermission = () =>
 
 //- decorator lấy thông tin user hiện tại từ req.user
 export const CurrentUser = createParamDecorator(
+  //- Nhờ có keyof IUserPayload, nếu gõ @CurrentUser('field_sai_ten')
+  //- TypeScript sẽ báo lỗi đỏ ngay lập tức, buộc phải gõ đúng tên field của user để lấy ra field cần dùng.
   (data: keyof IUserPayload | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<{ user?: IUserPayload }>();
     const user = request.user;

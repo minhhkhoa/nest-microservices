@@ -9,6 +9,7 @@ import {
   ResponseMessage,
   User,
 } from '@app/common';
+import type { IUserPayload } from '@app/common';
 import {
   Body,
   Controller,
@@ -142,7 +143,7 @@ export class GatewayAuthController {
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   async logout(
-    @CurrentUser() user: User,
+    @CurrentUser() user: IUserPayload,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -172,7 +173,7 @@ export class GatewayAuthController {
     description: 'Thông tin người dùng hiện tại',
   })
   @Get('profile')
-  getProfile(@CurrentUser() user: User): User {
+  getProfile(@CurrentUser() user: IUserPayload): IUserPayload {
     return user;
   }
 }

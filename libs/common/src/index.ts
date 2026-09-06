@@ -14,10 +14,11 @@ export * from './interceptors/logging.interceptor';
 export * from './filters/all-exceptions.filter';
 export * from './filters/rpc-exception.filter';
 
-//- export dtos
+//- export dtos & interfaces
 export * from './dtos/order/create-order.dto';
 export * from './dtos/inventory/check-inventory.dto';
 export * from './dtos/auth/auth.dto';
+export * from './interfaces/auth-user.interface';
 
 //- export modules dùng chung
 export * from './rmq/rmq.module';

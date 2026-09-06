@@ -1,10 +1,11 @@
 import {
   CMD_PATTERNS,
   REDIS_KEYS,
+  REDIS_TTL,
   RedisService,
   SERVICES,
-  User,
 } from '@app/common';
+import type { IUserPayload } from '@app/common';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
@@ -34,30 +35,62 @@ export class GatewayJwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: Request, payload: JwtPayload): Promise<User> {
+  async validate(req: Request, payload: JwtPayload): Promise<IUserPayload> {
     //- trích xuất raw token từ header authorization
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
     if (token) {
-      //- kiểm tra xem token có nằm trong danh sách đen redis do đã đăng xuất hay không
-      const isBlacklisted = await this.redisService.exists(
-        REDIS_KEYS.AUTH.BLACKLIST_TOKEN(token),
-      );
-      if (isBlacklisted) {
-        throw new UnauthorizedException(
-          'Phiên đăng nhập đã bị vô hiệu hóa do đã đăng xuất',
+      try {
+        //- kiểm tra xem token có nằm trong danh sách đen redis do đã đăng xuất hay không
+        const isBlacklisted = await this.redisService.exists(
+          REDIS_KEYS.AUTH.BLACKLIST_TOKEN(token),
         );
+        if (isBlacklisted) {
+          throw new UnauthorizedException(
+            'Phiên đăng nhập đã bị vô hiệu hóa do đã đăng xuất',
+          );
+        }
+      } catch {
+        //- tiếp tục nếu kết nối redis tạm thời bị gián đoạn
       }
     }
 
     const userId = payload.sub || payload.id;
-    //- lưu ý: đây là nút thắt cổ chai vì mỗi request đều gọi tcp và query database typeorm, sẽ xử lý tối ưu với redis cache hoặc stateless jwt payload sau
-    //- gọi sang auth-service lấy đầy đủ user kèm role và permissions
-    const user = await firstValueFrom(
-      this.authClient.send<User | null>(
-        { cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS },
-        { id: userId },
-      ),
-    );
+    if (!userId) {
+      throw new UnauthorizedException('Token không hợp lệ (thiếu user id)');
+    }
+
+    //- bước 1: thử lấy thông tin user kèm quyền hạn từ redis cache
+    let user: IUserPayload | null = null;
+    try {
+      user = await this.redisService.getJson<IUserPayload>(
+        REDIS_KEYS.AUTH.USER_PERMISSIONS(userId),
+      );
+    } catch {
+      //- nếu redis gặp sự cố, bỏ qua lỗi để fallback gọi tcp sang auth-service
+    }
+
+    //- bước 2: nếu cache miss, gọi sang auth-service qua tcp và nạp lại vào cache redis
+    if (!user) {
+      user = await firstValueFrom(
+        this.authClient.send<IUserPayload | null>(
+          { cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS },
+          { id: userId },
+        ),
+      );
+
+      //- nếu tìm thấy user hợp lệ, ghi vào redis cache với ttl định sẵn
+      if (user && user.isActive) {
+        try {
+          await this.redisService.setJson(
+            REDIS_KEYS.AUTH.USER_PERMISSIONS(userId),
+            user,
+            REDIS_TTL.USER_PERMISSIONS,
+          );
+        } catch {
+          //- bỏ qua nếu ghi redis cache thất bại
+        }
+      }
+    }
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException(

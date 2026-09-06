@@ -11,10 +11,10 @@ import {
   IS_PUBLIC_KEY,
   IS_PUBLIC_PERMISSION_KEY,
 } from '../decorators/customize.decorator';
-import { User } from '../entities/auth/user.entity';
+import { IUserPayload } from '../interfaces/auth-user.interface';
 
 interface AuthenticatedRequest {
-  user?: User;
+  user?: IUserPayload;
   method: string;
   url?: string;
   originalUrl?: string;

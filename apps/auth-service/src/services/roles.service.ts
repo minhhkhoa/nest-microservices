@@ -1,4 +1,11 @@
-import { CreateRoleDto, Permission, Role, UpdateRoleDto } from '@app/common';
+import {
+  CreateRoleDto,
+  Permission,
+  REDIS_KEYS,
+  RedisService,
+  Role,
+  UpdateRoleDto,
+} from '@app/common';
 import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
@@ -11,6 +18,7 @@ export class RolesService {
   constructor(
     private readonly roleRepository: RoleRepository,
     private readonly permissionRepository: PermissionRepository,
+    private readonly redisService: RedisService,
   ) {}
 
   //- tạo vai trò mới kèm gán danh sách quyền hạn
@@ -87,16 +95,49 @@ export class RolesService {
       }
     }
 
-    return await this.roleRepository.save(role);
+    const saved = await this.roleRepository.save(role);
+
+    //- xóa toàn bộ cache user permissions trên redis để các user mang role này cập nhật quyền tức thì
+    try {
+      await this.redisService.delByPattern(
+        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+      );
+    } catch {
+      //- bỏ qua nếu redis gặp sự cố
+    }
+
+    return saved;
   }
 
   //- xóa mềm một hoặc nhiều vai trò theo id / mảng ids
   async deleteRole(ids: string | string[]): Promise<boolean> {
-    return await this.roleRepository.softDelete(ids);
+    const result = await this.roleRepository.softDelete(ids);
+
+    //- xóa cache user permissions trên redis
+    try {
+      await this.redisService.delByPattern(
+        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+      );
+    } catch {
+      //- bỏ qua nếu redis gặp sự cố
+    }
+
+    return result;
   }
 
   //- khôi phục một hoặc nhiều vai trò đã xóa mềm theo id / mảng ids
   async restoreRole(ids: string | string[]): Promise<boolean> {
-    return await this.roleRepository.restore(ids);
+    const result = await this.roleRepository.restore(ids);
+
+    //- xóa cache user permissions trên redis
+    try {
+      await this.redisService.delByPattern(
+        REDIS_KEYS.AUTH.USER_PERMISSIONS_PREFIX,
+      );
+    } catch {
+      //- bỏ qua nếu redis gặp sự cố
+    }
+
+    return result;
   }
 }

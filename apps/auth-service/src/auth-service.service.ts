@@ -229,8 +229,9 @@ export class AuthService {
 
     //- nếu trong redis có id khác với id gửi lên -> phát hiện hành vi dùng lại token cũ (token reuse)
     if (currentTokenId && tokenId && currentTokenId !== tokenId) {
-      //- lập tức thu hồi toàn bộ token của người dùng này để bảo vệ tài khoản
+      //- lập tức thu hồi toàn bộ token và xóa cache phân quyền của người dùng này để bảo vệ tài khoản
       await this.redisService.del(REDIS_KEYS.AUTH.REFRESH_TOKEN(userId));
+      await this.redisService.del(REDIS_KEYS.AUTH.USER_PERMISSIONS(userId));
       await this.userRepository.update(userId, { refreshToken: null });
       throw new UnauthorizedException(
         'Phát hiện refresh token cũ được tái sử dụng. Toàn bộ phiên đăng nhập đã bị hủy vì lý do an toàn',
@@ -260,8 +261,9 @@ export class AuthService {
 
   //- đăng xuất tài khoản, thu hồi refresh token và đưa access token vào redis blacklist
   async logout(userId: string, accessToken?: string) {
-    //- xóa id của refresh token trên redis
+    //- xóa id của refresh token và xóa cache user permissions trên redis
     await this.redisService.del(REDIS_KEYS.AUTH.REFRESH_TOKEN(userId));
+    await this.redisService.del(REDIS_KEYS.AUTH.USER_PERMISSIONS(userId));
 
     //- đặt lại refreshToken = null trong database postgresql
     await this.userRepository.update(userId, {

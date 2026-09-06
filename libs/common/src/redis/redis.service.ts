@@ -115,13 +115,21 @@ export class RedisService implements OnModuleDestroy {
     return await this.client.del(...keys);
   }
 
-  //- xóa các key theo pattern (ví dụ: 'cache:products:*')
+  //- xóa các key theo pattern an toàn không gây block server (sử dụng scanStream thay vì keys)
   async delByPattern(pattern: string): Promise<number> {
-    const keys = await this.client.keys(pattern);
-    if (keys.length > 0) {
-      return await this.client.del(...keys);
+    const stream = this.client.scanStream({
+      match: pattern,
+      count: 100,
+    });
+    let totalDeleted = 0;
+    for await (const resultKeys of stream) {
+      const keys = resultKeys as string[];
+      if (keys.length > 0) {
+        const deleted = await this.client.del(...keys);
+        totalDeleted += deleted;
+      }
     }
-    return 0;
+    return totalDeleted;
   }
 
   //- kiểm tra sự tồn tại của key

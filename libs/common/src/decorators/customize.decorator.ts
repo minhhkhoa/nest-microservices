@@ -3,7 +3,7 @@ import {
   ExecutionContext,
   SetMetadata,
 } from '@nestjs/common';
-import { User } from '../entities/auth/user.entity';
+import { IUserPayload } from '../interfaces/auth-user.interface';
 
 //- bypass hoàn toàn không cần đăng nhập jwt
 export const IS_PUBLIC_KEY = 'isPublic';
@@ -16,8 +16,8 @@ export const PublicPermission = () =>
 
 //- decorator lấy thông tin user hiện tại từ req.user
 export const CurrentUser = createParamDecorator(
-  (data: keyof User | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest<{ user?: User }>();
+  (data: keyof IUserPayload | undefined, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest<{ user?: IUserPayload }>();
     const user = request.user;
     return data && user ? user[data] : user;
   },

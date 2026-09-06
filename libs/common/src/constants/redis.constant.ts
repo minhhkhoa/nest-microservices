@@ -10,5 +10,16 @@ export const REDIS_KEYS = {
     BLACKLIST_TOKEN: (token: string) => `blacklist:token:${token}`,
     //- tiền tố tìm kiếm hoặc xóa hàng loạt token trong blacklist
     BLACKLIST_TOKEN_PREFIX: 'blacklist:token:*',
+
+    //- key lưu cache thông tin user kèm role và permissions
+    USER_PERMISSIONS: (userId: string) => `auth:user_permissions:${userId}`,
+    //- tiền tố tìm kiếm hoặc xóa hàng loạt cache user permissions
+    USER_PERMISSIONS_PREFIX: 'auth:user_permissions:*',
   },
+} as const;
+
+//- định nghĩa thời gian sống mặc định của các cache trên redis (tính theo giây)
+export const REDIS_TTL = {
+  //- thời gian sống của cache user permissions (15 phút)
+  USER_PERMISSIONS: 15 * 60,
 } as const;

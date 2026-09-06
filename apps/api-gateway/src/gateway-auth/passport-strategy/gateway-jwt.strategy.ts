@@ -1,4 +1,10 @@
-import { RedisService, User } from '@app/common';
+import {
+  CMD_PATTERNS,
+  REDIS_KEYS,
+  RedisService,
+  SERVICES,
+  User,
+} from '@app/common';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
@@ -18,7 +24,7 @@ export class GatewayJwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    @Inject(SERVICES.AUTH) private readonly authClient: ClientProxy,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -34,7 +40,7 @@ export class GatewayJwtStrategy extends PassportStrategy(Strategy) {
     if (token) {
       //- kiểm tra xem token có nằm trong danh sách đen redis do đã đăng xuất hay không
       const isBlacklisted = await this.redisService.exists(
-        `blacklist:token:${token}`,
+        REDIS_KEYS.AUTH.BLACKLIST_TOKEN(token),
       );
       if (isBlacklisted) {
         throw new UnauthorizedException(
@@ -48,7 +54,7 @@ export class GatewayJwtStrategy extends PassportStrategy(Strategy) {
     //- gọi sang auth-service lấy đầy đủ user kèm role và permissions
     const user = await firstValueFrom(
       this.authClient.send<User | null>(
-        { cmd: 'user_get_with_permissions' },
+        { cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS },
         { id: userId },
       ),
     );

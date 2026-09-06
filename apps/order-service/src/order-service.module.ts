@@ -1,4 +1,4 @@
-import { DatabaseModule, Order, RmqModule } from '@app/common';
+import { DatabaseModule, Order, RmqModule, SERVICES } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -19,14 +19,14 @@ import { OrderServiceService } from './order-service.service';
 
     //- đăng ký kết nối rabbitmq sang inventory_service qua biến môi trường
     RmqModule.registerAsync({
-      name: 'INVENTORY_SERVICE',
+      name: SERVICES.INVENTORY,
       queue: process.env.INVENTORY_QUEUE || 'inventory_queue',
       urlKey: 'RABBITMQ_URL',
     }),
 
     //- đăng ký kết nối rabbitmq sang notification_service qua biến môi trường
     RmqModule.registerAsync({
-      name: 'NOTIFICATION_SERVICE',
+      name: SERVICES.NOTIFICATION,
       queue: process.env.NOTIFICATION_QUEUE || 'notification_queue',
       urlKey: 'RABBITMQ_URL',
     }),

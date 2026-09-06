@@ -1,4 +1,4 @@
-import { CreateOrderDto, Order } from '@app/common';
+import { CMD_PATTERNS, CreateOrderDto, Order } from '@app/common';
 import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -9,13 +9,13 @@ export class OrderServiceController {
   constructor(private readonly orderService: OrderServiceService) {}
 
   //- lắng nghe lệnh create_order gửi tới qua rabbitmq
-  @MessagePattern({ cmd: 'create_order' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ORDER.CREATE_ORDER })
   async createOrder(@Payload() createOrderDto: CreateOrderDto) {
     return await this.orderService.createOrder(createOrderDto);
   }
 
   //- lắng nghe lệnh get_orders gửi tới qua rabbitmq kèm bộ lọc/phân trang
-  @MessagePattern({ cmd: 'get_orders' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ORDER.GET_ORDERS })
   async getOrders(
     @Payload() condition?: ConditionQuery<Order>,
   ): Promise<FindAllResponse<Order>> {
@@ -23,13 +23,13 @@ export class OrderServiceController {
   }
 
   //- lấy chi tiết đơn hàng theo id
-  @MessagePattern({ cmd: 'get_order_by_id' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ORDER.GET_ORDER_BY_ID })
   async getOrderById(@Payload() data: { id: string }): Promise<Order> {
     return await this.orderService.getOrderById(data.id);
   }
 
   //- xóa mềm một hoặc nhiều đơn hàng (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'delete_order' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ORDER.DELETE_ORDER })
   async deleteOrder(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],
@@ -42,7 +42,7 @@ export class OrderServiceController {
   }
 
   //- khôi phục một hoặc nhiều đơn hàng đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'restore_order' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ORDER.RESTORE_ORDER })
   async restoreOrder(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],

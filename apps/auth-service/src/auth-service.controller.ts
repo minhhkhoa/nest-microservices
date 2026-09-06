@@ -1,4 +1,5 @@
 import {
+  CMD_PATTERNS,
   CreatePermissionDto,
   CreateRoleDto,
   Permission,
@@ -23,7 +24,7 @@ export class AuthController {
   ) {}
 
   //- kiểm tra đăng nhập email và password
-  @MessagePattern({ cmd: 'auth_validate_user' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.VALIDATE_USER })
   async validateUser(
     @Payload() data: { email: string; password?: string; pass?: string },
   ) {
@@ -32,62 +33,62 @@ export class AuthController {
   }
 
   //- đăng ký tài khoản
-  @MessagePattern({ cmd: 'auth_register' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.REGISTER })
   async register(@Payload() data: RegisterDto) {
     return await this.authService.register(data);
   }
 
   //- lấy thông tin tài khoản kèm quyền hạn phục vụ jwt strategy
-  @MessagePattern({ cmd: 'user_get_with_permissions' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.GET_USER_WITH_PERMISSIONS })
   async getUserWithPermissions(@Payload() data: { id: string }) {
     return await this.authService.getUserWithPermissions(data.id);
   }
 
   //- đăng nhập và sinh cặp token cho tài khoản
-  @MessagePattern({ cmd: 'auth_login' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.LOGIN })
   async login(@Payload() data: { userId: string }) {
     return await this.authService.login(data.userId);
   }
 
   //- làm mới access token và xoay vòng refresh token
-  @MessagePattern({ cmd: 'auth_refresh_token' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.REFRESH_TOKEN })
   async refreshTokens(@Payload() data: { refreshToken: string }) {
     return await this.authService.refreshTokens(data.refreshToken);
   }
 
   //- đăng xuất tài khoản, thu hồi refresh token và đưa access token vào redis blacklist
-  @MessagePattern({ cmd: 'auth_logout' })
+  @MessagePattern({ cmd: CMD_PATTERNS.AUTH.LOGOUT })
   async logout(@Payload() data: { userId: string; accessToken?: string }) {
     return await this.authService.logout(data.userId, data.accessToken);
   }
 
   // ================= ROLE PATTERNS =================
   //- tạo vai trò mới
-  @MessagePattern({ cmd: 'role_create' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.CREATE })
   async createRole(@Payload() data: CreateRoleDto) {
     return await this.rolesService.createRole(data);
   }
 
   //- lấy danh sách vai trò phân trang và tìm kiếm
-  @MessagePattern({ cmd: 'role_find_all' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.FIND_ALL })
   async getRoles(@Payload() condition?: ConditionQuery<Role>) {
     return await this.rolesService.findAllRoles(condition);
   }
 
   //- lấy chi tiết vai trò theo id
-  @MessagePattern({ cmd: 'role_find_by_id' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.FIND_BY_ID })
   async getRoleById(@Payload() data: { id: string }) {
     return await this.rolesService.findRoleById(data.id);
   }
 
   //- cập nhật vai trò
-  @MessagePattern({ cmd: 'role_update' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.UPDATE })
   async updateRole(@Payload() data: { id: string; dto: UpdateRoleDto }) {
     return await this.rolesService.updateRole(data.id, data.dto);
   }
 
   //- xóa mềm một hoặc nhiều vai trò (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'role_delete' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.DELETE })
   async deleteRole(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],
@@ -100,7 +101,7 @@ export class AuthController {
   }
 
   //- khôi phục một hoặc nhiều vai trò đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'role_restore' })
+  @MessagePattern({ cmd: CMD_PATTERNS.ROLE.RESTORE })
   async restoreRole(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],
@@ -114,25 +115,25 @@ export class AuthController {
 
   // ================= PERMISSION PATTERNS =================
   //- tạo quyền hạn mới
-  @MessagePattern({ cmd: 'permission_create' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.CREATE })
   async createPermission(@Payload() data: CreatePermissionDto) {
     return await this.permissionsService.createPermission(data);
   }
 
   //- lấy danh sách quyền hạn phân trang và tìm kiếm
-  @MessagePattern({ cmd: 'permission_find_all' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.FIND_ALL })
   async getPermissions(@Payload() condition?: ConditionQuery<Permission>) {
     return await this.permissionsService.findAllPermissions(condition);
   }
 
   //- lấy chi tiết quyền hạn theo id
-  @MessagePattern({ cmd: 'permission_find_by_id' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.FIND_BY_ID })
   async getPermissionById(@Payload() data: { id: string }) {
     return await this.permissionsService.findPermissionById(data.id);
   }
 
   //- cập nhật quyền hạn
-  @MessagePattern({ cmd: 'permission_update' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.UPDATE })
   async updatePermission(
     @Payload() data: { id: string; dto: UpdatePermissionDto },
   ) {
@@ -140,7 +141,7 @@ export class AuthController {
   }
 
   //- xóa mềm một hoặc nhiều quyền hạn (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'permission_delete' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.DELETE })
   async deletePermission(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],
@@ -153,7 +154,7 @@ export class AuthController {
   }
 
   //- khôi phục một hoặc nhiều quyền hạn đã xóa mềm (nhận id đơn lẻ hoặc mảng ids)
-  @MessagePattern({ cmd: 'permission_restore' })
+  @MessagePattern({ cmd: CMD_PATTERNS.PERMISSION.RESTORE })
   async restorePermission(
     @Payload()
     data: { id?: string | string[]; ids?: string[] } | string | string[],

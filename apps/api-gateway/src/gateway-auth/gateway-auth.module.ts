@@ -1,4 +1,4 @@
-import { TcpModule } from '@app/common';
+import { SERVICES, TcpModule } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -27,7 +27,7 @@ import { GatewayLocalStrategy } from './passport-strategy/gateway-local.strategy
     }),
     //- đăng ký kết nối tcp sang auth-service qua biến môi trường
     TcpModule.registerAsync({
-      name: 'AUTH_SERVICE',
+      name: SERVICES.AUTH,
       portKey: 'AUTH_SERVICE_PORT',
       hostKey: 'AUTH_SERVICE_HOST',
     }),

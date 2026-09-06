@@ -1,4 +1,4 @@
-import { User } from '@app/common';
+import { CMD_PATTERNS, SERVICES, User } from '@app/common';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PassportStrategy } from '@nestjs/passport';
@@ -7,9 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class GatewayLocalStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
-  ) {
+  constructor(@Inject(SERVICES.AUTH) private readonly authClient: ClientProxy) {
     super({ usernameField: 'email' });
   }
 
@@ -17,7 +15,7 @@ export class GatewayLocalStrategy extends PassportStrategy(Strategy) {
     //- gửi message tcp sang auth-service để kiểm tra email & password
     const user = await firstValueFrom(
       this.authClient.send<User | null>(
-        { cmd: 'auth_validate_user' },
+        { cmd: CMD_PATTERNS.AUTH.VALIDATE_USER },
         { email, password },
       ),
     );

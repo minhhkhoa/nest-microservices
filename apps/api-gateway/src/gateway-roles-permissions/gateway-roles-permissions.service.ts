@@ -1,10 +1,12 @@
 import {
+  CMD_PATTERNS,
   ConditionQuery,
   CreatePermissionDto,
   CreateRoleDto,
   FindAllResponse,
   Permission,
   Role,
+  SERVICES,
   UpdatePermissionDto,
   UpdateRoleDto,
 } from '@app/common';
@@ -16,14 +18,14 @@ import { firstValueFrom } from 'rxjs';
 export class GatewayRolesPermissionsService {
   constructor(
     //- inject tcp client auth_service để giao tiếp microservice
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    @Inject(SERVICES.AUTH) private readonly authClient: ClientProxy,
   ) {}
 
   // ================= ROLES =================
   //- gửi yêu cầu tạo vai trò mới kèm danh sách quyền
   async createRole(dto: CreateRoleDto): Promise<Role> {
     return await firstValueFrom(
-      this.authClient.send<Role>({ cmd: 'role_create' }, dto),
+      this.authClient.send<Role>({ cmd: CMD_PATTERNS.ROLE.CREATE }, dto),
     );
   }
 
@@ -33,7 +35,7 @@ export class GatewayRolesPermissionsService {
   ): Promise<FindAllResponse<Role>> {
     return await firstValueFrom(
       this.authClient.send<FindAllResponse<Role>>(
-        { cmd: 'role_find_all' },
+        { cmd: CMD_PATTERNS.ROLE.FIND_ALL },
         condition || {},
       ),
     );
@@ -42,28 +44,34 @@ export class GatewayRolesPermissionsService {
   //- lấy chi tiết vai trò theo id
   async getRoleById(id: string): Promise<Role> {
     return await firstValueFrom(
-      this.authClient.send<Role>({ cmd: 'role_find_by_id' }, { id }),
+      this.authClient.send<Role>({ cmd: CMD_PATTERNS.ROLE.FIND_BY_ID }, { id }),
     );
   }
 
   //- cập nhật vai trò
   async updateRole(id: string, dto: UpdateRoleDto): Promise<Role> {
     return await firstValueFrom(
-      this.authClient.send<Role>({ cmd: 'role_update' }, { id, dto }),
+      this.authClient.send<Role>(
+        { cmd: CMD_PATTERNS.ROLE.UPDATE },
+        { id, dto },
+      ),
     );
   }
 
   //- xóa mềm một hoặc nhiều vai trò
   async deleteRole(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'role_delete' }, { ids }),
+      this.authClient.send<boolean>({ cmd: CMD_PATTERNS.ROLE.DELETE }, { ids }),
     );
   }
 
   //- khôi phục một hoặc nhiều vai trò
   async restoreRole(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'role_restore' }, { ids }),
+      this.authClient.send<boolean>(
+        { cmd: CMD_PATTERNS.ROLE.RESTORE },
+        { ids },
+      ),
     );
   }
 
@@ -71,7 +79,10 @@ export class GatewayRolesPermissionsService {
   //- gửi yêu cầu tạo quyền mới
   async createPermission(dto: CreatePermissionDto): Promise<Permission> {
     return await firstValueFrom(
-      this.authClient.send<Permission>({ cmd: 'permission_create' }, dto),
+      this.authClient.send<Permission>(
+        { cmd: CMD_PATTERNS.PERMISSION.CREATE },
+        dto,
+      ),
     );
   }
 
@@ -81,7 +92,7 @@ export class GatewayRolesPermissionsService {
   ): Promise<FindAllResponse<Permission>> {
     return await firstValueFrom(
       this.authClient.send<FindAllResponse<Permission>>(
-        { cmd: 'permission_find_all' },
+        { cmd: CMD_PATTERNS.PERMISSION.FIND_ALL },
         condition || {},
       ),
     );
@@ -91,7 +102,7 @@ export class GatewayRolesPermissionsService {
   async getPermissionById(id: string): Promise<Permission> {
     return await firstValueFrom(
       this.authClient.send<Permission>(
-        { cmd: 'permission_find_by_id' },
+        { cmd: CMD_PATTERNS.PERMISSION.FIND_BY_ID },
         { id },
       ),
     );
@@ -104,7 +115,7 @@ export class GatewayRolesPermissionsService {
   ): Promise<Permission> {
     return await firstValueFrom(
       this.authClient.send<Permission>(
-        { cmd: 'permission_update' },
+        { cmd: CMD_PATTERNS.PERMISSION.UPDATE },
         { id, dto },
       ),
     );
@@ -113,14 +124,20 @@ export class GatewayRolesPermissionsService {
   //- xóa mềm một hoặc nhiều quyền hạn
   async deletePermission(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'permission_delete' }, { ids }),
+      this.authClient.send<boolean>(
+        { cmd: CMD_PATTERNS.PERMISSION.DELETE },
+        { ids },
+      ),
     );
   }
 
   //- khôi phục một hoặc nhiều quyền hạn
   async restorePermission(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: 'permission_restore' }, { ids }),
+      this.authClient.send<boolean>(
+        { cmd: CMD_PATTERNS.PERMISSION.RESTORE },
+        { ids },
+      ),
     );
   }
 }

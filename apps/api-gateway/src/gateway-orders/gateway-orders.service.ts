@@ -1,4 +1,4 @@
-import { CreateOrderDto, Order } from '@app/common';
+import { CMD_PATTERNS, CreateOrderDto, Order, SERVICES } from '@app/common';
 import type { ConditionQuery, FindAllResponse } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 export class GatewayOrdersService {
   constructor(
     //- inject rabbitmq client order_service đã đăng ký trong module
-    @Inject('ORDER_SERVICE') private readonly orderClient: ClientProxy,
+    @Inject(SERVICES.ORDER) private readonly orderClient: ClientProxy,
   ) {}
 
   //- chuyển tiếp request tạo đơn hàng sang order-service qua rabbitmq rpc
@@ -16,7 +16,10 @@ export class GatewayOrdersService {
     createOrderDto: CreateOrderDto,
   ): Promise<{ message: string; order: Order }> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'create_order' }, createOrderDto),
+      this.orderClient.send(
+        { cmd: CMD_PATTERNS.ORDER.CREATE_ORDER },
+        createOrderDto,
+      ),
     );
   }
 
@@ -25,28 +28,34 @@ export class GatewayOrdersService {
     condition?: ConditionQuery<Order>,
   ): Promise<FindAllResponse<Order>> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'get_orders' }, condition || {}),
+      this.orderClient.send(
+        { cmd: CMD_PATTERNS.ORDER.GET_ORDERS },
+        condition || {},
+      ),
     );
   }
 
   //- lấy chi tiết đơn hàng theo id
   async getOrderById(id: string): Promise<Order> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'get_order_by_id' }, { id }),
+      this.orderClient.send(
+        { cmd: CMD_PATTERNS.ORDER.GET_ORDER_BY_ID },
+        { id },
+      ),
     );
   }
 
   //- xóa mềm một hoặc nhiều đơn hàng (nhận 1 id hoặc mảng ids)
   async deleteOrder(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'delete_order' }, { ids }),
+      this.orderClient.send({ cmd: CMD_PATTERNS.ORDER.DELETE_ORDER }, { ids }),
     );
   }
 
   //- khôi phục một hoặc nhiều đơn hàng đã xóa mềm (nhận 1 id hoặc mảng ids)
   async restoreOrder(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.orderClient.send({ cmd: 'restore_order' }, { ids }),
+      this.orderClient.send({ cmd: CMD_PATTERNS.ORDER.RESTORE_ORDER }, { ids }),
     );
   }
 }

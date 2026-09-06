@@ -1,4 +1,5 @@
 import {
+  REDIS_KEYS,
   RedisService,
   ROLE_CUSTOMER,
   RegisterDto,
@@ -164,7 +165,7 @@ export class AuthService {
 
     //- lưu token id hiện tại vào redis để kiểm tra token cũ bị dùng lại (reuse detection)
     await this.redisService.set(
-      `auth:refresh_token:${user.id}`,
+      REDIS_KEYS.AUTH.REFRESH_TOKEN(user.id),
       tokenId,
       refreshTtlSeconds,
     );
@@ -223,13 +224,13 @@ export class AuthService {
 
     //- lấy token id đang hoạt động trong redis để phát hiện token cũ
     const currentTokenId = await this.redisService.get(
-      `auth:refresh_token:${userId}`,
+      REDIS_KEYS.AUTH.REFRESH_TOKEN(userId),
     );
 
     //- nếu trong redis có id khác với id gửi lên -> phát hiện hành vi dùng lại token cũ (token reuse)
     if (currentTokenId && tokenId && currentTokenId !== tokenId) {
       //- lập tức thu hồi toàn bộ token của người dùng này để bảo vệ tài khoản
-      await this.redisService.del(`auth:refresh_token:${userId}`);
+      await this.redisService.del(REDIS_KEYS.AUTH.REFRESH_TOKEN(userId));
       await this.userRepository.update(userId, { refreshToken: null });
       throw new UnauthorizedException(
         'Phát hiện refresh token cũ được tái sử dụng. Toàn bộ phiên đăng nhập đã bị hủy vì lý do an toàn',
@@ -260,7 +261,7 @@ export class AuthService {
   //- đăng xuất tài khoản, thu hồi refresh token và đưa access token vào redis blacklist
   async logout(userId: string, accessToken?: string) {
     //- xóa id của refresh token trên redis
-    await this.redisService.del(`auth:refresh_token:${userId}`);
+    await this.redisService.del(REDIS_KEYS.AUTH.REFRESH_TOKEN(userId));
 
     //- đặt lại refreshToken = null trong database postgresql
     await this.userRepository.update(userId, {
@@ -276,7 +277,7 @@ export class AuthService {
           const remainingTtl = decoded.exp - currentTime;
           if (remainingTtl > 0) {
             await this.redisService.set(
-              `blacklist:token:${accessToken}`,
+              REDIS_KEYS.AUTH.BLACKLIST_TOKEN(accessToken),
               'revoked',
               remainingTtl,
             );

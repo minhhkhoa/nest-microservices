@@ -1,4 +1,4 @@
-import { RegisterDto, User } from '@app/common';
+import { CMD_PATTERNS, RegisterDto, SERVICES, User } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -14,13 +14,16 @@ export interface AuthTokensResponse {
 export class GatewayAuthService {
   constructor(
     //- inject tcp client auth_service đã đăng ký trong module
-    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    @Inject(SERVICES.AUTH) private readonly authClient: ClientProxy,
   ) {}
 
   //- chuyển yêu cầu đăng ký tài khoản sang auth-service qua tcp
   async register(registerDto: RegisterDto): Promise<User> {
     return await firstValueFrom(
-      this.authClient.send<User>({ cmd: 'auth_register' }, registerDto),
+      this.authClient.send<User>(
+        { cmd: CMD_PATTERNS.AUTH.REGISTER },
+        registerDto,
+      ),
     );
   }
 
@@ -28,7 +31,7 @@ export class GatewayAuthService {
   async login(user: User): Promise<AuthTokensResponse> {
     return await firstValueFrom(
       this.authClient.send<AuthTokensResponse>(
-        { cmd: 'auth_login' },
+        { cmd: CMD_PATTERNS.AUTH.LOGIN },
         { userId: user.id },
       ),
     );
@@ -38,7 +41,7 @@ export class GatewayAuthService {
   async refreshTokens(refreshToken: string): Promise<AuthTokensResponse> {
     return await firstValueFrom(
       this.authClient.send<AuthTokensResponse>(
-        { cmd: 'auth_refresh_token' },
+        { cmd: CMD_PATTERNS.AUTH.REFRESH_TOKEN },
         { refreshToken },
       ),
     );
@@ -51,7 +54,7 @@ export class GatewayAuthService {
   ): Promise<{ message: string }> {
     return await firstValueFrom(
       this.authClient.send<{ message: string }>(
-        { cmd: 'auth_logout' },
+        { cmd: CMD_PATTERNS.AUTH.LOGOUT },
         { userId, accessToken },
       ),
     );

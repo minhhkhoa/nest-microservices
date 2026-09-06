@@ -35,6 +35,8 @@ export * from './utils';
 
 //- export constants dùng chung
 export * from './constants/rbac.constant';
+export * from './constants/message-pattern.constant';
+export * from './constants/redis.constant';
 
 //- export file & storage utilities
 export * from './file/interfaces/storage.interface';

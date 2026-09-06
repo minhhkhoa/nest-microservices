@@ -1,8 +1,11 @@
 import {
+  CMD_PATTERNS,
   ConditionQuery,
   CreateOrderDto,
+  EVENT_PATTERNS,
   FindAllResponse,
   Order,
+  SERVICES,
 } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -16,11 +19,11 @@ export class OrderServiceService {
     private readonly orderRepository: OrderRepository,
 
     //- inject rabbitmq client inventory_service đã đăng ký trong module
-    @Inject('INVENTORY_SERVICE')
+    @Inject(SERVICES.INVENTORY)
     private readonly inventoryClient: ClientProxy,
 
     //- inject rabbitmq client notification_service đã đăng ký trong module
-    @Inject('NOTIFICATION_SERVICE')
+    @Inject(SERVICES.NOTIFICATION)
     private readonly notificationClient: ClientProxy,
   ) {}
 
@@ -35,7 +38,7 @@ export class OrderServiceService {
         stock: number;
         message: string;
       }>(
-        { cmd: 'check_inventory' },
+        { cmd: CMD_PATTERNS.INVENTORY.CHECK_INVENTORY },
         { productName: createOrderDto.productName, quantity: 1 },
       ),
     );
@@ -54,7 +57,7 @@ export class OrderServiceService {
     };
 
     //- bước 3: bắn event order_created sang notification-service theo kiểu fire-and-forget
-    this.notificationClient.emit('order_created', result);
+    this.notificationClient.emit(EVENT_PATTERNS.ORDER.ORDER_CREATED, result);
 
     return result;
   }

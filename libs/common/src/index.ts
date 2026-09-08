@@ -48,6 +48,8 @@ export * from './utils';
 export * from './constants/rbac.constant';
 export * from './constants/message-pattern.constant';
 export * from './constants/redis.constant';
+export * from './constants/service-name.constant';
+
 
 //- export file & storage utilities
 export * from './file/interfaces/storage.interface';

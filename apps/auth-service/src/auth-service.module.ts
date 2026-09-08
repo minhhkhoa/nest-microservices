@@ -33,10 +33,13 @@ import { RolesService } from './services/roles.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_ACCESS_SECRET'),
+        secret:
+          configService.get<string>('JWT_ACCESS_SECRET') ||
+          'your_jwt_access_secret_here',
         signOptions: {
           expiresIn: ms(
-            configService.get<string>('JWT_ACCESS_EXPIRES_IN') as StringValue,
+            (configService.get<string>('JWT_ACCESS_EXPIRES_IN') ||
+              '1d') as StringValue,
           ),
         },
       }),

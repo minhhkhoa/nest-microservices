@@ -75,12 +75,12 @@ export class LogBroadcasterService implements OnModuleDestroy {
       this.redisClient
         .publish(REDIS_LOGS_CHANNEL, payloadString)
         .catch(() => {});
-      //- lưu trữ 200 dòng log gần nhất để người dùng tải lại trang vẫn xem được
+      //- lưu trữ 1000 dòng log gần nhất để người dùng tải lại trang vẫn xem được
       this.redisClient
         .lpush(REDIS_LOGS_HISTORY_KEY, payloadString)
         .then(() => {
           this.redisClient
-            ?.ltrim(REDIS_LOGS_HISTORY_KEY, 0, 199)
+            ?.ltrim(REDIS_LOGS_HISTORY_KEY, 0, 999)
             .catch(() => {});
         })
         .catch(() => {});

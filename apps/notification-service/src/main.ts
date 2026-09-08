@@ -1,8 +1,4 @@
-import {
-  AppLoggerService,
-  RpcExceptionFilter,
-  RpcLoggingInterceptor,
-} from '@app/common';
+import { SERVICE_NAMES, setupMicroservice } from '@app/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NotificationServiceModule } from './notification-service.module';
@@ -27,14 +23,8 @@ async function bootstrap() {
     },
   );
 
-  const appLogger = app.get(AppLoggerService);
-  appLogger.setServiceName('notification-service');
-
-  //- áp dụng interceptor ghi log rpc 1 dòng và đẩy lên web dashboard
-  app.useGlobalInterceptors(
-    new RpcLoggingInterceptor(appLogger, 'notification-service'),
-  );
-  app.useGlobalFilters(new RpcExceptionFilter(appLogger));
+  //- cấu hình tập trung logger, interceptor và exception filter qua helper chuẩn hóa
+  setupMicroservice(app, SERVICE_NAMES.NOTIFICATION);
 
   await app.listen();
   console.log(

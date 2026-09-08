@@ -75,21 +75,22 @@ export class GatewayLogsController implements OnModuleDestroy {
     });
   }
 
-  //- lấy danh sách 200 dòng log gần nhất từ redis
+  //- lấy danh sách 1000 dòng log gần nhất từ redis
   @Public()
   @ApiExcludeEndpoint()
   @Get('history')
-  async getHistory(): Promise<unknown[]> {
+  async getHistory(@Res() res: Response): Promise<void> {
     if (!this.redisClient) {
-      return [];
+      res.json([]);
+      return;
     }
     try {
       const items = await this.redisClient.lrange(
         REDIS_LOGS_HISTORY_KEY,
         0,
-        199,
+        999,
       );
-      return items
+      const parsed = items
         .map((raw) => {
           try {
             return JSON.parse(raw) as unknown;
@@ -98,8 +99,9 @@ export class GatewayLogsController implements OnModuleDestroy {
           }
         })
         .filter(Boolean);
+      res.json(parsed);
     } catch {
-      return [];
+      res.json([]);
     }
   }
 
@@ -107,7 +109,7 @@ export class GatewayLogsController implements OnModuleDestroy {
   @Public()
   @ApiExcludeEndpoint()
   @Delete('history')
-  async clearHistory(): Promise<{ success: boolean }> {
+  async clearHistory(@Res() res: Response): Promise<void> {
     if (this.redisClient) {
       try {
         await this.redisClient.del(REDIS_LOGS_HISTORY_KEY);
@@ -115,7 +117,7 @@ export class GatewayLogsController implements OnModuleDestroy {
         //- bỏ qua nếu lỗi redis
       }
     }
-    return { success: true };
+    res.json({ success: true });
   }
 
   async onModuleDestroy() {

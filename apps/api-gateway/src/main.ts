@@ -1,3 +1,4 @@
+import { AppLoggerService, SERVICE_NAMES } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,6 +7,11 @@ import { ApiGatewayModule } from './api-gateway.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
+
+  //- thiết lập logger toàn cục chuẩn hóa cho api gateway
+  const appLogger = app.get(AppLoggerService);
+  appLogger.setServiceName(SERVICE_NAMES.GATEWAY);
+  app.useLogger(appLogger);
 
   //- kích hoạt cookie-parser để trích xuất cookie từ request client (như refresh_token)
   app.use(cookieParser());

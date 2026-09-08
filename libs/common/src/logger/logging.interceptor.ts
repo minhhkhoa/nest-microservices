@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AppLoggerService } from '../logger/app-logger.service';
+import { AppLoggerService } from './app-logger.service';
 
 interface RequestWithMeta {
   method?: string;
@@ -43,7 +43,7 @@ const maskSensitiveData = (data: unknown): unknown => {
   return result;
 };
 
-//- interceptor ghi log vết và đo lường thời gian thực thi request api qua pino logger
+//- interceptor ghi log vết và đo lường thời gian thực thi request api lên web dashboard
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(private readonly logger: AppLoggerService) {
@@ -111,7 +111,7 @@ export class LoggingInterceptor implements NestInterceptor {
           const errorMessage = err instanceof Error ? err.message : String(err);
           const stackTrace = err instanceof Error ? err.stack : undefined;
 
-          //- ghi log lỗi http có cấu trúc ra stdout
+          //- ghi log lỗi http có cấu trúc lên dashboard
           this.logger.error(
             {
               type: 'HTTP_REQUEST_ERROR',

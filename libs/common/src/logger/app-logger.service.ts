@@ -1,48 +1,25 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+
 import {
   ConsoleLogger,
   Injectable,
   LoggerService,
   Optional,
 } from '@nestjs/common';
-import { execSync } from 'child_process';
-import pino from 'pino';
-import { ContextService } from '../context/context.service';
 import { LogBroadcasterService, LogPayload } from './log-broadcaster.service';
+import { ContextService } from './context.service';
 
-type PinoInstance = pino.Logger;
-
-//- tự động kích hoạt bảng mã utf-8 (chcp 65001) trên windows để hiển thị tiếng việt có dấu rõ nét
-if (process.platform === 'win32') {
-  try {
-    execSync('chcp 65001', { stdio: 'ignore' });
-  } catch {
-    //- bỏ qua nếu môi trường terminal không hỗ trợ lệnh chcp
-  }
-}
-
-//- service ghi log chuẩn cấu trúc kết hợp xuất terminal 1 dòng gọn gàng và phát tán lên web dashboard
+//- service ghi log chuẩn cấu trúc, kết hợp console logger mặc định của nestjs và phát tán lên web dashboard qua redis
 @Injectable()
 export class AppLoggerService implements LoggerService {
-  private pinoLogger: PinoInstance;
   private contextName = 'Application';
   private defaultServiceName = process.env.SERVICE_NAME || 'nest-microservice';
   private broadcaster: LogBroadcasterService;
-  //- console logger chuẩn mặc định của nestjs để hiển thị thông điệp hệ thống và controller
+  //- console logger chuẩn mặc định của nestjs để hiển thị thông điệp hệ thống
   private readonly nestConsoleLogger = new ConsoleLogger();
 
   constructor(@Optional() broadcaster?: LogBroadcasterService) {
     this.broadcaster = broadcaster || new LogBroadcasterService();
-    const logLevel = (process.env.LOG_LEVEL || 'info') as pino.LevelWithSilent;
-    //- kiểm tra cờ môi trường cho phép in log ra console (mặc định là tắt để giữ terminal log mặc định của nest)
-    const isConsoleEnabled = process.env.ENABLE_CONSOLE_LOG === 'true';
-
-    //- khởi tạo pino ở dạng json tiêu chuẩn hoặc silent nếu tắt console
-    this.pinoLogger = pino({
-      level: isConsoleEnabled ? logLevel : 'silent',
-      //- format timestamp dạng iso chuẩn chuỗi thời gian
-      timestamp: () => `,"time":"${new Date().toISOString()}"`,
-    });
   }
 
   //- thiết lập context cho từng module hoặc service gọi đến logger
@@ -69,52 +46,6 @@ export class AppLoggerService implements LoggerService {
     };
   }
 
-  //- format dòng log in ra terminal trên 1 dòng duy nhất có màu sắc rõ đẹp
-  private printConsoleLine(
-    level: 'info' | 'warn' | 'error' | 'debug',
-    message: string,
-    context?: string,
-    trace?: string,
-  ): void {
-    //- nếu không bật cờ console log thì không in ra terminal để chỉ hiển thị log mặc định của nest
-    if (process.env.ENABLE_CONSOLE_LOG !== 'true') {
-      return;
-    }
-
-    if (process.env.NODE_ENV === 'production') {
-      return; //- production đã có pino json ra stdout
-    }
-
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}.${String(now.getMilliseconds()).padStart(3, '0')}`;
-    const correlationId = ContextService.getCorrelationId();
-    const serviceName =
-      ContextService.getServiceName() || this.defaultServiceName;
-    const ctx = context || this.contextName;
-
-    //- màu sắc mã ansi cho từng cấp độ log
-    const colors = {
-      info: '\x1b[32m[INFO ]\x1b[0m',
-      warn: '\x1b[33m[WARN ]\x1b[0m',
-      error: '\x1b[31m[ERROR]\x1b[0m',
-      debug: '\x1b[34m[DEBUG]\x1b[0m',
-    };
-
-    const timeTag = `\x1b[90m${timeStr}\x1b[0m`;
-    const serviceTag = `\x1b[35m[${serviceName}]\x1b[0m`;
-    const ctxTag = `\x1b[36m[${ctx}]\x1b[0m`;
-    const traceTag = correlationId ? `\x1b[33m[${correlationId}]\x1b[0m` : '';
-
-    const prefix = [timeTag, colors[level], serviceTag, ctxTag, traceTag]
-      .filter(Boolean)
-      .join(' ');
-    console.log(`${prefix} ${message}`);
-
-    if (trace) {
-      console.log(`\x1b[90m${trace}\x1b[0m`);
-    }
-  }
-
   //- phát log lên redis cho web dashboard
   private dispatchToDashboard(payload: LogPayload): void {
     this.broadcaster.broadcast(payload);
@@ -128,13 +59,10 @@ export class AppLoggerService implements LoggerService {
         ? JSON.stringify(message)
         : String(message);
 
-    //- nếu không phải log request tự động (HTTP/RPC) thì in ra terminal theo định dạng chuẩn của nestjs
+    //- in ra terminal theo định dạng chuẩn của nestjs cho các thông điệp hệ thống
     if (meta.context !== 'HTTP' && meta.context !== 'RPC') {
       this.nestConsoleLogger.log(msgStr, meta.context);
-    } else {
-      this.printConsoleLine('info', msgStr, meta.context);
     }
-    this.pinoLogger.info(meta, msgStr);
 
     this.dispatchToDashboard({
       timestamp: new Date().toISOString(),
@@ -160,10 +88,7 @@ export class AppLoggerService implements LoggerService {
 
     if (meta.context !== 'HTTP' && meta.context !== 'RPC') {
       this.nestConsoleLogger.error(msgStr, trace, meta.context);
-    } else {
-      this.printConsoleLine('error', msgStr, meta.context, trace);
     }
-    this.pinoLogger.error({ ...meta, stack: trace }, msgStr);
 
     this.dispatchToDashboard({
       timestamp: new Date().toISOString(),
@@ -190,10 +115,7 @@ export class AppLoggerService implements LoggerService {
 
     if (meta.context !== 'HTTP' && meta.context !== 'RPC') {
       this.nestConsoleLogger.warn(msgStr, meta.context);
-    } else {
-      this.printConsoleLine('warn', msgStr, meta.context);
     }
-    this.pinoLogger.warn(meta, msgStr);
 
     this.dispatchToDashboard({
       timestamp: new Date().toISOString(),
@@ -219,10 +141,7 @@ export class AppLoggerService implements LoggerService {
 
     if (meta.context !== 'HTTP' && meta.context !== 'RPC') {
       this.nestConsoleLogger.debug(msgStr, meta.context);
-    } else {
-      this.printConsoleLine('debug', msgStr, meta.context);
     }
-    this.pinoLogger.debug(meta, msgStr);
 
     this.dispatchToDashboard({
       timestamp: new Date().toISOString(),
@@ -254,7 +173,7 @@ export class AppLoggerService implements LoggerService {
     this.error(message, trace, context);
   }
 
-  //- ghi log cấu trúc chuyên dụng cho http request tại api gateway
+  //- ghi log cấu trúc chuyên dụng cho http request tại api gateway đẩy lên web dashboard
   logHttpRequest(meta: {
     method: string;
     url: string;
@@ -268,12 +187,6 @@ export class AppLoggerService implements LoggerService {
   }): void {
     const contextMeta = this.getContextMetadata('HTTP');
     const msg = `HTTP ${meta.method} ${meta.url} [Status: ${meta.statusCode}] +${meta.durationMs}ms - IP: ${meta.ip}`;
-
-    this.printConsoleLine('info', msg, 'HTTP');
-    this.pinoLogger.info(
-      { ...contextMeta, type: 'HTTP_REQUEST', ...meta },
-      msg,
-    );
 
     const level =
       meta.statusCode >= 500
@@ -294,7 +207,7 @@ export class AppLoggerService implements LoggerService {
     });
   }
 
-  //- ghi log cấu trúc chuyên dụng cho rpc request tại microservices
+  //- ghi log cấu trúc chuyên dụng cho rpc request tại microservices đẩy lên web dashboard
   logRpcRequest(meta: {
     pattern: string;
     transport: 'RMQ' | 'TCP';
@@ -307,9 +220,6 @@ export class AppLoggerService implements LoggerService {
     const contextMeta = this.getContextMetadata('RPC');
     const statusText = meta.success ? 'SUCCESS' : 'FAILED';
     const msg = `[${meta.transport}] ${meta.pattern} ${statusText} +${meta.durationMs}ms${meta.error ? ` - Error: ${meta.error}` : ''}`;
-
-    this.printConsoleLine(meta.success ? 'info' : 'error', msg, 'RPC');
-    this.pinoLogger.info({ ...contextMeta, type: 'RPC_REQUEST', ...meta }, msg);
 
     this.dispatchToDashboard({
       timestamp: new Date().toISOString(),

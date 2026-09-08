@@ -10,17 +10,17 @@ export * from './decorators/query.decorator';
 export * from './decorators/swagger.decorator';
 export * from './guards/permission.guard';
 export * from './interceptors/transform.interceptor';
-export * from './interceptors/logging.interceptor';
-export * from './interceptors/rpc-logging.interceptor';
 export * from './filters/all-exceptions.filter';
 export * from './filters/rpc-exception.filter';
 
-//- export context và logger chuẩn cấu trúc
-export * from './context/context.service';
+//- export hệ thống logger, context và correlation id
+export * from './logger/context.service';
+export * from './logger/correlation-id.middleware';
+export * from './logger/logging.interceptor';
+export * from './logger/rpc-logging.interceptor';
 export * from './logger/app-logger.service';
 export * from './logger/log-broadcaster.service';
 export * from './logger/logger.module';
-export * from './middlewares/correlation-id.middleware';
 
 //- export dtos & interfaces
 export * from './dtos/order/create-order.dto';
@@ -49,7 +49,6 @@ export * from './constants/rbac.constant';
 export * from './constants/message-pattern.constant';
 export * from './constants/redis.constant';
 export * from './constants/service-name.constant';
-
 
 //- export file & storage utilities
 export * from './file/interfaces/storage.interface';

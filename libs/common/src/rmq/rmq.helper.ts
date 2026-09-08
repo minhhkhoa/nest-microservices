@@ -1,5 +1,5 @@
 import { RmqRecordBuilder } from '@nestjs/microservices';
-import { ContextService } from '../context/context.service';
+import { ContextService } from '../logger/context.service';
 
 //- hàm tiện ích đóng gói message rabbitmq tự động đính kèm correlation id vào headers
 export const createRmqRecord = <T>(

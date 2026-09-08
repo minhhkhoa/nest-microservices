@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { ContextService } from '../context/context.service';
+import { ContextService } from './context.service';
 
 export const CORRELATION_ID_HEADER = 'x-correlation-id';
 

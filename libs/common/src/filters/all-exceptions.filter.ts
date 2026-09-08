@@ -7,7 +7,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ContextService } from '../context/context.service';
+import { ContextService } from '../logger/context.service';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 //- bộ lọc ngoại lệ toàn cục cho tầng http gateway bắt tất cả các loại lỗi và log ra stdout
@@ -65,7 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception);
     const correlationId = ContextService.getCorrelationId();
 
-    //- ghi log lỗi chuẩn cấu trúc ra stdout qua pino
+    //- ghi log lỗi chuẩn cấu trúc lên web dashboard
     this.logger.error(
       {
         type: 'HTTP_EXCEPTION',

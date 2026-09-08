@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
-import { ContextService } from '../context/context.service';
 import { AppLoggerService } from './app-logger.service';
+import { ContextService } from './context.service';
 import { LogBroadcasterService } from './log-broadcaster.service';
 
-//- module cung cấp logger pino, quản lý context correlation id và phát tán log qua redis
+//- module cung cấp hệ thống logger, quản lý context correlation id và phát tán log qua redis
 @Global()
 @Module({
   providers: [AppLoggerService, ContextService, LogBroadcasterService],

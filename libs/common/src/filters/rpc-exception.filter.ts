@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { Observable, throwError } from 'rxjs';
-import { ContextService } from '../context/context.service';
+import { ContextService } from '../logger/context.service';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 //- bộ lọc ngoại lệ toàn cục cho các microservice xử lý qua rabbitmq và tcp
@@ -65,7 +65,7 @@ export class RpcExceptionFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception);
     const correlationId = ContextService.getCorrelationId();
 
-    //- ghi log lỗi rpc chuẩn cấu trúc ra stdout qua pino
+    //- ghi log lỗi rpc chuẩn cấu trúc lên web dashboard
     this.logger.error(
       {
         type: 'RPC_EXCEPTION',

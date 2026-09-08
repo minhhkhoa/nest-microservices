@@ -1,4 +1,4 @@
-import { ContextService } from '../context/context.service';
+import { ContextService } from '../logger/context.service';
 
 //- hàm tiện ích đóng gói payload tcp đính kèm correlation id vào trường _meta
 export const withCorrelationMeta = <T>(data: T): T => {

@@ -7,8 +7,8 @@ import {
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
-import { ContextService } from '../context/context.service';
-import { AppLoggerService } from '../logger/app-logger.service';
+import { AppLoggerService } from './app-logger.service';
+import { ContextService } from './context.service';
 
 interface RmqMessageProps {
   properties?: {

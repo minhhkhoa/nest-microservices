@@ -1,7 +1,7 @@
 import { INestMicroservice } from '@nestjs/common';
 import { ServiceName } from '../constants/service-name.constant';
 import { RpcExceptionFilter } from '../filters/rpc-exception.filter';
-import { RpcLoggingInterceptor } from '../interceptors/rpc-logging.interceptor';
+import { RpcLoggingInterceptor } from '../logger/rpc-logging.interceptor';
 import { AppLoggerService } from '../logger/app-logger.service';
 
 //- cấu hình tập trung logger, interceptor và filter cho các microservices

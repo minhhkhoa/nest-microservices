@@ -9,6 +9,7 @@ import {
   SERVICES,
   UpdatePermissionDto,
   UpdateRoleDto,
+  withCorrelationMeta,
 } from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -22,10 +23,13 @@ export class GatewayRolesPermissionsService {
   ) {}
 
   // ================= ROLES =================
-  //- gửi yêu cầu tạo vai trò mới kèm danh sách quyền
+  //- gửi yêu cầu tạo vai trò mới kèm danh sách quyền và correlation id
   async createRole(dto: CreateRoleDto): Promise<Role> {
     return await firstValueFrom(
-      this.authClient.send<Role>({ cmd: CMD_PATTERNS.ROLE.CREATE }, dto),
+      this.authClient.send<Role>(
+        { cmd: CMD_PATTERNS.ROLE.CREATE },
+        withCorrelationMeta(dto),
+      ),
     );
   }
 
@@ -36,7 +40,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<FindAllResponse<Role>>(
         { cmd: CMD_PATTERNS.ROLE.FIND_ALL },
-        condition || {},
+        withCorrelationMeta(condition || {}),
       ),
     );
   }
@@ -44,7 +48,10 @@ export class GatewayRolesPermissionsService {
   //- lấy chi tiết vai trò theo id
   async getRoleById(id: string): Promise<Role> {
     return await firstValueFrom(
-      this.authClient.send<Role>({ cmd: CMD_PATTERNS.ROLE.FIND_BY_ID }, { id }),
+      this.authClient.send<Role>(
+        { cmd: CMD_PATTERNS.ROLE.FIND_BY_ID },
+        withCorrelationMeta({ id }),
+      ),
     );
   }
 
@@ -53,7 +60,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<Role>(
         { cmd: CMD_PATTERNS.ROLE.UPDATE },
-        { id, dto },
+        withCorrelationMeta({ id, dto }),
       ),
     );
   }
@@ -61,7 +68,10 @@ export class GatewayRolesPermissionsService {
   //- xóa mềm một hoặc nhiều vai trò
   async deleteRole(ids: string | string[]): Promise<boolean> {
     return await firstValueFrom(
-      this.authClient.send<boolean>({ cmd: CMD_PATTERNS.ROLE.DELETE }, { ids }),
+      this.authClient.send<boolean>(
+        { cmd: CMD_PATTERNS.ROLE.DELETE },
+        withCorrelationMeta({ ids }),
+      ),
     );
   }
 
@@ -70,7 +80,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<boolean>(
         { cmd: CMD_PATTERNS.ROLE.RESTORE },
-        { ids },
+        withCorrelationMeta({ ids }),
       ),
     );
   }
@@ -81,7 +91,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<Permission>(
         { cmd: CMD_PATTERNS.PERMISSION.CREATE },
-        dto,
+        withCorrelationMeta(dto),
       ),
     );
   }
@@ -93,7 +103,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<FindAllResponse<Permission>>(
         { cmd: CMD_PATTERNS.PERMISSION.FIND_ALL },
-        condition || {},
+        withCorrelationMeta(condition || {}),
       ),
     );
   }
@@ -103,7 +113,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<Permission>(
         { cmd: CMD_PATTERNS.PERMISSION.FIND_BY_ID },
-        { id },
+        withCorrelationMeta({ id }),
       ),
     );
   }
@@ -116,7 +126,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<Permission>(
         { cmd: CMD_PATTERNS.PERMISSION.UPDATE },
-        { id, dto },
+        withCorrelationMeta({ id, dto }),
       ),
     );
   }
@@ -126,7 +136,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<boolean>(
         { cmd: CMD_PATTERNS.PERMISSION.DELETE },
-        { ids },
+        withCorrelationMeta({ ids }),
       ),
     );
   }
@@ -136,7 +146,7 @@ export class GatewayRolesPermissionsService {
     return await firstValueFrom(
       this.authClient.send<boolean>(
         { cmd: CMD_PATTERNS.PERMISSION.RESTORE },
-        { ids },
+        withCorrelationMeta({ ids }),
       ),
     );
   }

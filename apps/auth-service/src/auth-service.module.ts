@@ -1,5 +1,6 @@
 import {
   DatabaseModule,
+  LoggerModule,
   Permission,
   RedisModule,
   Role,
@@ -23,6 +24,8 @@ import { RolesService } from './services/roles.service';
   imports: [
     //- nạp biến môi trường toàn cục cho auth service
     ConfigModule.forRoot({ isGlobal: true }),
+    //- import logger module toàn cục quản lý pino và context correlation id
+    LoggerModule,
     //- kết nối postgres database auth_db riêng biệt cho auth service
     DatabaseModule.forRoot({ database: 'auth_db' }),
     TypeOrmModule.forFeature([User, Role, Permission]),

@@ -1,4 +1,10 @@
-import { DatabaseModule, Order, RmqModule, SERVICES } from '@app/common';
+import {
+  DatabaseModule,
+  LoggerModule,
+  Order,
+  RmqModule,
+  SERVICES,
+} from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +16,9 @@ import { OrderServiceService } from './order-service.service';
   imports: [
     //- nạp biến môi trường toàn cục
     ConfigModule.forRoot({ isGlobal: true }),
+
+    //- import logger module toàn cục quản lý pino và context correlation id
+    LoggerModule,
 
     //- kết nối tới database postgresql với tên database truyền trực tiếp qua tham số
     DatabaseModule.forRoot({ database: 'order_db' }),

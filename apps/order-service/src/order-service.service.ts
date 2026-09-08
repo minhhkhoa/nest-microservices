@@ -2,6 +2,7 @@ import {
   CMD_PATTERNS,
   ConditionQuery,
   CreateOrderDto,
+  createRmqRecord,
   EVENT_PATTERNS,
   FindAllResponse,
   Order,
@@ -31,7 +32,7 @@ export class OrderServiceService {
   async createOrder(
     createOrderDto: CreateOrderDto,
   ): Promise<{ message: string; order: Order }> {
-    //- bước 1: hỏi inventory-service qua rabbitmq xem còn hàng không
+    //- bước 1: hỏi inventory-service qua rabbitmq xem còn hàng không kèm theo correlation id
     const inventoryCheck = await firstValueFrom(
       this.inventoryClient.send<{
         available: boolean;
@@ -39,7 +40,10 @@ export class OrderServiceService {
         message: string;
       }>(
         { cmd: CMD_PATTERNS.INVENTORY.CHECK_INVENTORY },
-        { productName: createOrderDto.productName, quantity: 1 },
+        createRmqRecord({
+          productName: createOrderDto.productName,
+          quantity: 1,
+        }),
       ),
     );
 
@@ -56,8 +60,11 @@ export class OrderServiceService {
       order,
     };
 
-    //- bước 3: bắn event order_created sang notification-service theo kiểu fire-and-forget
-    this.notificationClient.emit(EVENT_PATTERNS.ORDER.ORDER_CREATED, result);
+    //- bước 3: bắn event order_created sang notification-service kèm theo correlation id
+    this.notificationClient.emit(
+      EVENT_PATTERNS.ORDER.ORDER_CREATED,
+      createRmqRecord(result),
+    );
 
     return result;
   }

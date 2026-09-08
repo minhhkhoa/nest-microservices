@@ -52,6 +52,7 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 API Gateway (HTTP) đang chạy tại: http://localhost:${port}`);
   console.log(`📚 Swagger UI tài liệu API: http://localhost:${port}/api/docs`);
+  console.log(`📊 Web Log Dashboard: http://localhost:${port}/logs`);
 }
 
 bootstrap().catch((err) => {

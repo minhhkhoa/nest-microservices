@@ -2,16 +2,11 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
-  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-  getCurrentDateString,
-  getFormattedTimestamp,
-  writeLogToFile,
-} from '../utils';
+import { AppLoggerService } from '../logger/app-logger.service';
 
 interface RequestWithMeta {
   method?: string;
@@ -21,12 +16,39 @@ interface RequestWithMeta {
   headers?: Record<string, string | string[] | undefined>;
   socket?: { remoteAddress?: string };
   user?: { id?: string | number };
+  body?: unknown;
+  query?: unknown;
+  params?: unknown;
 }
 
-//- interceptor ghi log vết và đo lường thời gian thực thi request api cả console và file
+//- che giấu các trường nhạy cảm như mật khẩu hoặc token để bảo mật
+const maskSensitiveData = (data: unknown): unknown => {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data.map((item) => maskSensitiveData(item));
+  }
+  const result: Record<string, unknown> = {};
+  const sensitiveKeys = ['password', 'pass', 'refreshToken', 'token', 'secret'];
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    if (sensitiveKeys.includes(key.toLowerCase())) {
+      result[key] = '******';
+    } else if (typeof value === 'object' && value !== null) {
+      result[key] = maskSensitiveData(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+};
+
+//- interceptor ghi log vết và đo lường thời gian thực thi request api qua pino logger
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  private readonly logger = new Logger('HTTP');
+  constructor(private readonly logger: AppLoggerService) {
+    this.logger.setContext('HTTP');
+  }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const ctx = context.switchToHttp();
@@ -39,7 +61,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method } = request;
     const url = request.originalUrl || request.url || '';
     const now = Date.now();
-    const userId = request.user?.id ? `[User: ${request.user.id}]` : '[Guest]';
+    const userId = request.user?.id ? String(request.user.id) : undefined;
 
     //- lấy địa chỉ ip của client
     const rawIp =
@@ -55,28 +77,31 @@ export class LoggingInterceptor implements NestInterceptor {
       ? rawUserAgent[0]
       : rawUserAgent;
 
+    //- trích xuất dữ liệu body an toàn
+    const requestBody = maskSensitiveData(request.body);
+
     return next.handle().pipe(
       tap({
-        next: () => {
+        next: (responseBody: unknown) => {
           const response = ctx.getResponse<{ statusCode?: number }>();
           const statusCode = response?.statusCode || 200;
-          const duration = Date.now() - now;
-          const timestamp = getFormattedTimestamp();
-          const dateStr = getCurrentDateString();
+          const durationMs = Date.now() - now;
 
-          //- in log ra terminal console
-          this.logger.log(
-            `${method} ${url} ${statusCode} ${userId} +${duration}ms - IP: ${ip}`,
-          );
-
-          //- ghi dòng log chi tiết vào file http-yyyy-mm-dd.log
-          const logLine = `[${timestamp}] [INFO] [HTTP] ${method} ${url} [Status: ${statusCode}] [Latency: ${duration}ms] [IP: ${ip}] ${userId} [Agent: ${userAgent}]`;
-          writeLogToFile(`http-${dateStr}.log`, logLine);
+          //- ghi log http có cấu trúc kèm request body và response data lên dashboard
+          this.logger.logHttpRequest({
+            method,
+            url,
+            statusCode,
+            durationMs,
+            ip,
+            userAgent,
+            userId,
+            requestBody: requestBody || undefined,
+            responseData: maskSensitiveData(responseBody) || undefined,
+          });
         },
         error: (err: unknown) => {
-          const duration = Date.now() - now;
-          const timestamp = getFormattedTimestamp();
-          const dateStr = getCurrentDateString();
+          const durationMs = Date.now() - now;
 
           //- trích xuất mã lỗi và thông điệp lỗi
           const statusCode =
@@ -84,19 +109,25 @@ export class LoggingInterceptor implements NestInterceptor {
               ? (err as { status: number }).status
               : 500;
           const errorMessage = err instanceof Error ? err.message : String(err);
-          const stackTrace = err instanceof Error ? err.stack : String(err);
+          const stackTrace = err instanceof Error ? err.stack : undefined;
 
-          //- in cảnh báo lỗi ra terminal console
+          //- ghi log lỗi http có cấu trúc ra stdout
           this.logger.error(
-            `${method} ${url} ${statusCode} ${userId} +${duration}ms - IP: ${ip} - Message: ${errorMessage}`,
+            {
+              type: 'HTTP_REQUEST_ERROR',
+              method,
+              url,
+              statusCode,
+              durationMs,
+              ip,
+              userAgent,
+              userId,
+              errorMessage,
+              requestBody: requestBody || undefined,
+            },
             stackTrace,
+            'HTTP',
           );
-
-          //- ghi chi tiết lỗi vào file http log và error log riêng
-          const errorLogLine = `[${timestamp}] [ERROR] [HTTP] ${method} ${url} [Status: ${statusCode}] [Latency: ${duration}ms] [IP: ${ip}] ${userId} [Agent: ${userAgent}] - Message: ${errorMessage}\nStack: ${stackTrace}\n${'-'.repeat(80)}`;
-
-          writeLogToFile(`http-${dateStr}.log`, errorLogLine);
-          writeLogToFile(`error-${dateStr}.log`, errorLogLine);
         },
       }),
     );

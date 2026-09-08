@@ -4,20 +4,22 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Optional,
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { Observable, throwError } from 'rxjs';
-import {
-  getCurrentDateString,
-  getFormattedTimestamp,
-  writeLogToFile,
-} from '../utils';
+import { ContextService } from '../context/context.service';
+import { AppLoggerService } from '../logger/app-logger.service';
 
 //- bộ lọc ngoại lệ toàn cục cho các microservice xử lý qua rabbitmq và tcp
 @Catch()
 export class RpcExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger('RpcExceptionFilter');
+  private readonly logger: AppLoggerService;
+
+  constructor(@Optional() logger?: AppLoggerService) {
+    this.logger = logger || new AppLoggerService();
+    this.logger.setContext('RpcExceptionFilter');
+  }
 
   catch(exception: unknown, _host: ArgumentsHost): Observable<any> {
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -59,27 +61,30 @@ export class RpcExceptionFilter implements ExceptionFilter {
       }
     }
 
-    const timestamp = getFormattedTimestamp();
-    const dateStr = getCurrentDateString();
     const stack =
       exception instanceof Error ? exception.stack : String(exception);
+    const correlationId = ContextService.getCorrelationId();
 
-    //- ghi log lỗi microservice ra console
+    //- ghi log lỗi rpc chuẩn cấu trúc ra stdout qua pino
     this.logger.error(
-      `[Microservice RPC] [Status: ${statusCode}] - Message: ${message}`,
+      {
+        type: 'RPC_EXCEPTION',
+        statusCode,
+        errorMessage: message,
+        errorName: error,
+        correlationId,
+      },
       stack,
+      'RpcExceptionFilter',
     );
 
-    //- ghi chi tiết lỗi vào file error-yyyy-mm-dd.log
-    const logLine = `[${timestamp}] [ERROR] [MICROSERVICE_RPC] [Status: ${statusCode}] - Message: ${message}\nStack: ${stack}\n${'-'.repeat(80)}`;
-    writeLogToFile(`error-${dateStr}.log`, logLine);
-
-    //- ném lỗi chuẩn hóa qua rpc để api gateway hoặc service gọi nhận được
+    //- ném lỗi chuẩn hóa qua rpc để api gateway hoặc service gọi nhận được kèm correlation id
     return throwError(() => ({
       statusCode,
       message,
       error,
-      timestamp,
+      correlationId,
+      timestamp: new Date().toISOString(),
     }));
   }
 }

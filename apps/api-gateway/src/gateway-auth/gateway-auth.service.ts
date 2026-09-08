@@ -1,4 +1,10 @@
-import { CMD_PATTERNS, RegisterDto, SERVICES, User } from '@app/common';
+import {
+  CMD_PATTERNS,
+  RegisterDto,
+  SERVICES,
+  User,
+  withCorrelationMeta,
+} from '@app/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -9,7 +15,7 @@ export interface AuthTokensResponse {
   user: User;
 }
 
-//- service proxy tại api gateway chỉ làm nhiệm vụ chuyển tiếp request sang auth-service qua tcp
+//- service proxy tại api gateway chuyển tiếp request sang auth-service qua tcp kèm correlation id
 @Injectable()
 export class GatewayAuthService {
   constructor(
@@ -17,37 +23,37 @@ export class GatewayAuthService {
     @Inject(SERVICES.AUTH) private readonly authClient: ClientProxy,
   ) {}
 
-  //- chuyển yêu cầu đăng ký tài khoản sang auth-service qua tcp
+  //- chuyển yêu cầu đăng ký tài khoản sang auth-service qua tcp kèm correlation id
   async register(registerDto: RegisterDto): Promise<User> {
     return await firstValueFrom(
       this.authClient.send<User>(
         { cmd: CMD_PATTERNS.AUTH.REGISTER },
-        registerDto,
+        withCorrelationMeta(registerDto),
       ),
     );
   }
 
-  //- chuyển yêu cầu đăng nhập và nhận cặp token từ auth-service qua tcp
+  //- chuyển yêu cầu đăng nhập và nhận cặp token từ auth-service qua tcp kèm correlation id
   async login(user: User): Promise<AuthTokensResponse> {
     return await firstValueFrom(
       this.authClient.send<AuthTokensResponse>(
         { cmd: CMD_PATTERNS.AUTH.LOGIN },
-        { userId: user.id },
+        withCorrelationMeta({ userId: user.id }),
       ),
     );
   }
 
-  //- chuyển yêu cầu làm mới token sang auth-service qua tcp
+  //- chuyển yêu cầu làm mới token sang auth-service qua tcp kèm correlation id
   async refreshTokens(refreshToken: string): Promise<AuthTokensResponse> {
     return await firstValueFrom(
       this.authClient.send<AuthTokensResponse>(
         { cmd: CMD_PATTERNS.AUTH.REFRESH_TOKEN },
-        { refreshToken },
+        withCorrelationMeta({ refreshToken }),
       ),
     );
   }
 
-  //- chuyển yêu cầu đăng xuất sang auth-service qua tcp
+  //- chuyển yêu cầu đăng xuất sang auth-service qua tcp kèm correlation id
   async logout(
     userId: string,
     accessToken?: string,
@@ -55,7 +61,7 @@ export class GatewayAuthService {
     return await firstValueFrom(
       this.authClient.send<{ message: string }>(
         { cmd: CMD_PATTERNS.AUTH.LOGOUT },
-        { userId, accessToken },
+        withCorrelationMeta({ userId, accessToken }),
       ),
     );
   }

@@ -4,19 +4,19 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Injectable,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import {
-  getCurrentDateString,
-  getFormattedTimestamp,
-  writeLogToFile,
-} from '../utils';
+import { ContextService } from '../context/context.service';
+import { AppLoggerService } from '../logger/app-logger.service';
 
-//- bộ lọc ngoại lệ toàn cục cho tầng http gateway bắt tất cả các loại lỗi
+//- bộ lọc ngoại lệ toàn cục cho tầng http gateway bắt tất cả các loại lỗi và log ra stdout
+@Injectable()
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger('AllExceptionsFilter');
+  constructor(private readonly logger: AppLoggerService) {
+    this.logger.setContext('AllExceptionsFilter');
+  }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -43,7 +43,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (typeof exception === 'object' && exception !== null) {
       const errObj = exception as Record<string, unknown>;
 
-      //- xử lý lỗi rpc trả về từ microservice qua rabbitmq/tcp
+      //- xử lý lỗi rpc trả về từ microservice qua rabbitmq hoặc tcp
       if (errObj.statusCode && typeof errObj.statusCode === 'number') {
         status = errObj.statusCode;
       } else if (errObj.status && typeof errObj.status === 'number') {
@@ -58,30 +58,36 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    const timestamp = getFormattedTimestamp();
-    const dateStr = getCurrentDateString();
     const url = request?.url || '';
     const method = request?.method || '';
     const ip = request?.ip || request?.socket?.remoteAddress || 'unknown';
     const stack =
       exception instanceof Error ? exception.stack : String(exception);
+    const correlationId = ContextService.getCorrelationId();
 
-    //- ghi log lỗi ra console terminal
+    //- ghi log lỗi chuẩn cấu trúc ra stdout qua pino
     this.logger.error(
-      `${method} ${url} [Status: ${status}] - IP: ${ip} - Message: ${JSON.stringify(message)}`,
+      {
+        type: 'HTTP_EXCEPTION',
+        method,
+        url,
+        statusCode: status,
+        ip,
+        errorMessage: message,
+        errorName,
+        correlationId,
+      },
       stack,
+      'AllExceptionsFilter',
     );
 
-    //- ghi chi tiết lỗi vào file error-yyyy-mm-dd.log
-    const logLine = `[${timestamp}] [ERROR] [HTTP] ${method} ${url} [Status: ${status}] [IP: ${ip}] - Message: ${JSON.stringify(message)}\nStack: ${stack}\n${'-'.repeat(80)}`;
-    writeLogToFile(`error-${dateStr}.log`, logLine);
-
-    //- trả về response chuẩn hóa cho client
+    //- trả về response chuẩn hóa cho client kèm correlation id để đối soát
     response.status(status).json({
       statusCode: status,
       message,
       error: errorName,
-      timestamp,
+      correlationId,
+      timestamp: new Date().toISOString(),
       path: url,
     });
   }
